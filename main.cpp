@@ -1,3 +1,5 @@
+#include <fstream>
+
 #include "include/ZataVM.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>  // 用于自动转换std::vector
@@ -20,6 +22,31 @@ std::vector<MixedType> stack_to_vector(const std::stack<MixedType>& stack) {
     return result;
 }
 
+auto read_zir(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+
+    if (!file.is_open()) {
+        std::cerr << "failed to open file: " << filename << std::endl;
+        return std::vector<unsigned char>{};
+    }
+
+    file.seekg(0, std::ios::end);
+    const std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    std::vector<unsigned char> buffer(size);
+
+    file.read(reinterpret_cast<char*>(buffer.data()), size);
+
+    if (!file) {
+        std::cerr << "Unknown error that we only read" << file.gcount() << "b, instead of" << size << " b" << std::endl;
+        return std::vector<unsigned char>{}; // 返回空vector表示错误
+    }
+
+    file.close();
+    return buffer;
+}
+
 std::vector<MixedType> execute_bytecode(
     const std::vector<MixedType>& bytecode,
     const std::vector<MixedType>& constants,
@@ -32,16 +59,11 @@ std::vector<MixedType> execute_bytecode(
     return stack_to_vector(final_stack);
 }
 
-int main() {
-    std::cout << "Hello World!" << std::endl;
-    return 0;
-}
 
-// 修改为：模块名 = 目标名（cppZvm）
 PYBIND11_MODULE(cppZvm, m) {
     m.doc() = "Zata虚拟机Python绑定";
 
     m.def("execute_bytecode", &execute_bytecode,
           "执行字节码并返回最终栈状态",
-          py::arg("bytecode"), py::arg("constants"), py::arg("globals"));
+          py::arg("bytecode"));
 }
