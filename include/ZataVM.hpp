@@ -14,6 +14,8 @@
 
 #include "ZvmOpcodes.hpp"
 
+using MixedType = std::variant<int, bool, std::string, std::shared_ptr<ZataObject>>;
+
 // 调用帧
 struct CallFrame {
      int pc = 0;
@@ -31,7 +33,7 @@ class ZataVirtualMachine {
     std::vector<MixedType>  constant_pool;
 
     std::vector<MixedType> code;
-    std::stack<Function> current_function;
+    std::stack<ZataFunction> current_function;
     int pc = 0;
     bool running = false;
 
@@ -45,15 +47,13 @@ public:
         globals.clear();
         constant_pool.clear();
         code.clear();
-        current_function = std::stack<Function>();
+        current_function = std::stack<ZataFunction>();
     }
 
     // 带参数的构造函数：可初始化常量池和全局变量
-    explicit ZataVirtualMachine(const std::vector<MixedType>& constants,
-                               const std::vector<MixedType>& globals = {})
+    explicit ZataVirtualMachine(const std::vector<MixedType>& constants)
         : ZataVirtualMachine() {  // 委托给默认构造函数
         this->constant_pool = constants;  // 初始化常量池
-        this->globals = globals;    // 初始化全局变量
     }
 
     std::stack<MixedType> run(const std::vector<MixedType> &main_code) {
@@ -262,12 +262,6 @@ public:
                     this->pc += 1;
                 }
             }
-            else if(opcode == static_cast<int>(Opcode::BRK)) {
-                break;
-            }
-            else if(opcode == static_cast<int>(Opcode::CONT)) {
-                continue;
-            }
             else if(opcode == static_cast<int>(Opcode::NOP)) {
                 // 空操作
             }
@@ -283,7 +277,7 @@ public:
                 }
                 auto zata_obj_ptr = std::get<std::shared_ptr<ZataObject>>(fn);
 
-                auto fn_ptr = std::dynamic_pointer_cast<Function>(zata_obj_ptr);
+                auto fn_ptr = std::dynamic_pointer_cast<ZataFunction>(zata_obj_ptr);
                 if (!fn_ptr) throw std::runtime_error("CALL opcode: object is not a Function");
 
                 std::vector<MixedType> function_code = fn_ptr->code;
@@ -338,7 +332,7 @@ public:
                 auto zata_obj_ptr = std::get<std::shared_ptr<ZataObject>>(class_obj);
 
                 // 使用 dynamic_pointer_cast 将基类指针转换为子类指针
-                auto class_ptr = std::dynamic_pointer_cast<Class>(zata_obj_ptr);
+                auto class_ptr = std::dynamic_pointer_cast<ZataClass>(zata_obj_ptr);
                 if (!class_ptr) {
                     throw std::runtime_error("NEW_OBJ opcode: object is not a Class");
                 }
@@ -376,6 +370,9 @@ public:
 
                 // 设置字段值
                 instance->set_field(std::get<std::string>(field_name), value);
+            }
+            else if(opcode == static_cast<int>(Opcode::GET_FIELD)) {
+                // TODO:...
             }
             else if(opcode == static_cast<int>(Opcode::CALL_METHOD)) {
                 int fn_addr = std::get<int>(current_code[this->pc]);
@@ -444,17 +441,6 @@ public:
                 this->current_function.push(*method);  // 注意：应压入查找到的 method 而非原 fn_ptr
                 this->pc = 0;
             }
-            else if(opcode == static_cast<int>(Opcode::WRITE)) {
-                MixedType target = this->op_stack.top();
-                this->op_stack.pop();
-
-                if(std::holds_alternative<int>(target)) {
-                    std::cout << std::get<int>(target);
-                }
-            }
-            else if(opcode == static_cast<int>(Opcode::READ)) {
-
-            }
             else if(opcode == static_cast<int>(Opcode::PUSH)) {
                 MixedType num = current_code[this->pc];
                 this->pc += 1;
@@ -474,6 +460,18 @@ public:
                 } else {
                     throw std::runtime_error("DUP opcode: stack underflow");
                 }
+            }
+            else if(opcode == static_cast<int>(Opcode::ALLOC)) {
+                //TODO:...
+            }
+            else if(opcode == static_cast<int>(Opcode::FREE)) {
+                //TODO:...
+            }
+            else if(opcode == static_cast<int>(Opcode::LOAD_MEM)) {
+                //TODO:...
+            }
+            else if(opcode == static_cast<int>(Opcode::STORE_MEM)) {
+                //TODO:...
             }
             else if(opcode == static_cast<int>(Opcode::BIT_AND)) {
                 auto b = std::get<int>(this->op_stack.top());

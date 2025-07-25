@@ -54,10 +54,6 @@ enum class Opcode : unsigned char {
     LOAD_MEM = 0x52,    // 从内存加载
     STORE_MEM = 0x53,   // 存储到内存
 
-    // IO
-    WRITE = 0x60,
-    READ = 0x61,
-
     // 二进制
     BIT_AND = 0x70, // 按位与
     BIT_OR = 0x71,  // 按位或

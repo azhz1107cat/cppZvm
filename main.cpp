@@ -52,7 +52,7 @@ std::vector<MixedType> execute_bytecode(
     const std::vector<MixedType>& constants,
     const std::vector<MixedType>& globals
 ) {
-    ZataVirtualMachine vm(constants, globals);
+    ZataVirtualMachine vm(constants);
     const auto final_stack = vm.run(bytecode);
 
     // 转换为vector返回给Python
