@@ -7,7 +7,8 @@
 #include <any>
 #include <memory>
 #include <variant>
-#include "ZvmOpcodes.hpp"  // 假设包含Opcode枚举定义
+
+using codeMember = int;
 
 // 基类：所有Zata对象的共同祖先
 struct ZataObject {
@@ -18,7 +19,7 @@ struct ZataObject {
 struct ZataModule final : ZataObject {
     std::string module_name;
     int local_count = 0;
-    std::vector<std::variant<Opcode, int>> bytecode;
+    std::vector<codeMember> bytecode;
     std::vector<std::any> consts;
     std::vector<std::pair<int, int>> map_of_line_num;
 };
@@ -29,7 +30,7 @@ struct ZataFunction final : ZataObject {
     int arg_count = 0;
     int local_count = 0;
     std::vector<std::any> consts;
-    std::vector<std::variant<Opcode, int>> bytecode;
+    std::vector<codeMember> bytecode;
     std::vector<std::pair<int, int>> map_of_line_num;
 };
 
@@ -39,7 +40,14 @@ struct ZataClass final : ZataObject {
 
     std::vector<std::shared_ptr<ZataClass>> parent_class;
     std::vector<std::any> consts;
-    std::vector<std::variant<Opcode, int>> bytecode;
+    std::vector<codeMember> bytecode;
+
+    std::vector<std::any> fields;
+    std::vector<std::pair<int, int>> map_of_line_num;
+};
+
+struct ZataInstanced final : ZataObject {
+    std::string class_name;
 
     std::vector<std::any> fields;
     std::vector<std::pair<int, int>> map_of_line_num;
@@ -57,7 +65,7 @@ struct ZataInt final : ZataObject {
 
 // 浮点数对象
 struct ZataFloat final : ZataObject {
-    double value;  // C++中double对应Python的float
+    double value;
 };
 
 #endif // ZATA_OBJECTS_H

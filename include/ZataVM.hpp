@@ -3,45 +3,44 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <vector>
 #include <stack>
-#include <map>
 #include <string>
 #include <memory>
 #include <variant>
-#include "Object_meta_data.hpp"
+#include "Objects.hpp"
 
 #include "ZvmOpcodes.hpp"
 
-using MixedType = std::variant<int, bool, std::string, std::shared_ptr<ZataObject>>;
+using ItemOfStack = std::variant<int, bool, std::string, std::shared_ptr<ZataObject>>;
 
 // 调用帧
 struct CallFrame {
      int pc = 0;
-     std::vector<MixedType> locals;
+     std::vector<ItemOfStack> locals;
      int return_address = 0;
+     std::string function_name;
 };
 
 // 虚拟机
 class ZataVirtualMachine {
-    std::stack<MixedType>   op_stack;
+    std::stack<ItemOfStack>   op_stack;
     std::stack<CallFrame>   call_stack;
 
-    std::vector<MixedType>  locals;
-    std::vector<MixedType>  globals;
-    std::vector<MixedType>  constant_pool;
+    std::vector<ItemOfStack>  locals;
+    std::vector<ItemOfStack>  globals;
+    std::vector<ItemOfStack>  constant_pool;
 
-    std::vector<MixedType> code;
+    std::vector<codeMember> code;
     std::stack<ZataFunction> current_function;
     int pc = 0;
     bool running = false;
 
 public:
     ZataVirtualMachine()
-        : pc(0), running(false) {
+        : pc(0) {
         // 初始化容器（可选，STL容器默认会自动初始化）
-        op_stack = std::stack<MixedType>();
+        op_stack = std::stack<ItemOfStack>();
         call_stack = std::stack<CallFrame>();
         locals.clear();
         globals.clear();
@@ -51,63 +50,69 @@ public:
     }
 
     // 带参数的构造函数：可初始化常量池和全局变量
-    explicit ZataVirtualMachine(const std::vector<MixedType>& constants)
+    explicit ZataVirtualMachine(const std::vector<ItemOfStack>& constants)
         : ZataVirtualMachine() {  // 委托给默认构造函数
         this->constant_pool = constants;  // 初始化常量池
     }
 
-    std::stack<MixedType> run(const std::vector<MixedType> &main_code) {
+    std::stack<ItemOfStack> run(const std::vector<codeMember> &main_code) {
         this->code = main_code;
         this->running = true;
         while(this->running) {
-            std::vector<MixedType> current_code =  !this->current_function.empty() ? this->current_function.top().code : this->code;
+            std::vector<codeMember> current_code =  !this->current_function.empty() ? this->current_function.top().bytecode : this->code;
 
             if (this->pc >= current_code.size()){
                 this->running = false;
                 break;
             }
 
-            const int opcode = std::get<int>(current_code[this->pc]);
+            const int opcode = current_code[this->pc];
             this->pc += 1;
 
-            if (opcode == static_cast<int>(Opcode::ADD)) {
+            switch (opcode) {
+            case Opcode::ADD: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a + b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::SUB)){
+            case Opcode::SUB: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a - b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::MUL)){
+            case Opcode::MUL: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a * b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::DIV)){
+            case Opcode::DIV: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 if(b == 0) throw std::runtime_error("Division by zero");
                 this->op_stack.emplace(a / b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::MOD)){
+            case Opcode::MOD: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 if(b == 0) throw std::runtime_error("Modulo by zero");
                 this->op_stack.emplace(a % b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::EQ_EQ)){
+            case Opcode::EQ_EQ: {
                 auto b = this->op_stack.top();
                 this->op_stack.pop();
                 auto a = this->op_stack.top();
@@ -121,8 +126,9 @@ public:
                 }
 
                 this->op_stack.emplace(result);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::NE)){
+            case Opcode::NE: {
                 auto b = this->op_stack.top();
                 this->op_stack.pop();
                 auto a = this->op_stack.top();
@@ -136,103 +142,119 @@ public:
                 }
 
                 this->op_stack.emplace(result);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::LT)){
+            case Opcode::LT: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a < b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::GT)){
+            case Opcode::GT: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a > b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::LE)){
+            case Opcode::LE: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a <= b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::GE)){
+            case Opcode::GE: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a >= b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::AND)){
+            case Opcode::AND: {
                 auto b = std::get<bool>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<bool>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a && b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::OR)){
+            case Opcode::OR: {
                 auto b = std::get<bool>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<bool>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a || b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::NOT)){
+            case Opcode::NOT: {
                 auto a = std::get<bool>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(!a);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::NEG)){
+            case Opcode::NEG: {
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(-a);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::SWAP)){
+            case Opcode::SWAP: {
                 auto b = this->op_stack.top();
                 this->op_stack.pop();
                 auto a = this->op_stack.top();
                 this->op_stack.pop();
                 this->op_stack.emplace(b);
                 this->op_stack.emplace(a);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::LOAD_CONST)) {
-                int const_addr = std::get<int>(current_code[this->pc]);
+            case Opcode::LOAD_CONST: {
+                int const_addr = current_code[this->pc];
                 this->pc += 1;
                 this->op_stack.emplace(this->constant_pool[const_addr]);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::LOAD_VAR)) {
-                int var_addr = std::get<int>(current_code[this->pc]);
+            case Opcode::LOAD_VAR: {
+                int var_addr = current_code[this->pc];
                 this->pc += 1;
                 this->op_stack.emplace(this->locals[var_addr]);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::STORE_VAR)) {
-                int var_addr = std::get<int>(current_code[this->pc]);
+            case Opcode::STORE_VAR: {
+                int var_addr = current_code[this->pc];
                 this->pc += 1;
-                MixedType val = this->op_stack.top();
+                ItemOfStack val = this->op_stack.top();
                 this->op_stack.pop();
                 this->locals[var_addr] = val;
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::LOAD_GLOBAL)) {
-                int var_addr = std::get<int>(current_code[this->pc]);
+            case Opcode::LOAD_GLOBAL: {
+                int var_addr = current_code[this->pc];
                 this->pc += 1;
                 this->op_stack.emplace(this->globals[var_addr]);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::STORE_GLOBAL)) {
-                int var_addr = std::get<int>(current_code[this->pc]);
+            case Opcode::STORE_GLOBAL: {
+                int var_addr = current_code[this->pc];
                 this->pc += 1;
-                MixedType val = this->op_stack.top();
+                ItemOfStack val = this->op_stack.top();
                 this->op_stack.pop();
                 this->globals[var_addr] = val;
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::JMP)) {
-                int offset = std::get<int>(current_code[this->pc]);
+            case Opcode::JMP: {
+                int offset = current_code[this->pc];
                 this->pc += offset;
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::JMP_IF_FALSE)) {
-                int offset = std::get<int>(current_code[this->pc]);
-                MixedType cond = this->op_stack.top();
+            case Opcode::JMP_IF_FALSE: {
+                int offset = current_code[this->pc];
+                ItemOfStack cond = this->op_stack.top();
                 this->op_stack.pop();
 
                 bool condition = false;
@@ -245,10 +267,11 @@ public:
                 } else {
                     this->pc += 1;
                 }
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::JMP_IF_TRUE)) {
-                int offset = std::get<int>(current_code[this->pc]);
-                MixedType cond = this->op_stack.top();
+            case Opcode::JMP_IF_TRUE: {
+                int offset = current_code[this->pc];
+                ItemOfStack cond = this->op_stack.top();
                 this->op_stack.pop();
 
                 bool condition = false;
@@ -261,16 +284,18 @@ public:
                 } else {
                     this->pc += 1;
                 }
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::NOP)) {
+            case Opcode::NOP: {
                 // 空操作
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::CALL)) {
-                int fn_addr = std::get<int>(current_code[this->pc]);
-                int arg_count = std::get<int>(current_code[this->pc + 1]);
+            case Opcode::CALL: {
+                int fn_addr = current_code[this->pc];
+                int arg_count = current_code[this->pc + 1];
                 this->pc += 2;
 
-                MixedType fn = this->constant_pool[fn_addr];
+                ItemOfStack fn = this->constant_pool[fn_addr];
 
                 if (!std::holds_alternative<std::shared_ptr<ZataObject>>(fn)) {
                     throw std::runtime_error("CALL opcode: function is not a ZataObject");
@@ -280,10 +305,10 @@ public:
                 auto fn_ptr = std::dynamic_pointer_cast<ZataFunction>(zata_obj_ptr);
                 if (!fn_ptr) throw std::runtime_error("CALL opcode: object is not a Function");
 
-                std::vector<MixedType> function_code = fn_ptr->code;
+                std::vector<int> function_code = fn_ptr->bytecode;
 
-                std::vector<MixedType> fns_locals(arg_count);
-                std::vector<MixedType> args;
+                std::vector<ItemOfStack> fns_locals(arg_count);
+                std::vector<ItemOfStack> args;
 
                 for(int i = 0; i < arg_count; ++i) {
                     args.push_back(this->op_stack.top());
@@ -299,13 +324,16 @@ public:
                 frame.pc = this->pc;
                 frame.locals = this->locals;
                 frame.return_address = this->pc;
+                frame.function_name = fn_ptr->function_name;
                 this->call_stack.push(frame);
 
                 this->locals = fns_locals;
                 this->current_function.push(*fn_ptr);
+                this->code = fn_ptr->bytecode;
                 this->pc = 0;
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::RET)) {
+            case Opcode::RET: {
                 if (!this->call_stack.empty()) {
                     CallFrame frame = this->call_stack.top();
                     this->call_stack.pop();
@@ -319,12 +347,13 @@ public:
                 } else {
                     throw std::runtime_error("RET opcode: call stack is empty");
                 }
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::NEW_OBJ)) {
-                int class_addr = std::get<int>(current_code[this->pc]);
+            case Opcode::NEW_OBJ: {
+                int class_addr = current_code[this->pc];
                 this->pc += 1;
 
-                MixedType class_obj = this->constant_pool[class_addr];
+                ItemOfStack class_obj = this->constant_pool[class_addr];
 
                 // 检查是否为 shared_ptr<ZataObject>
                 if(!std::holds_alternative<std::shared_ptr<ZataObject>>(class_obj)) throw std::runtime_error("NEW_OBJ opcode: invalid class type");
@@ -337,21 +366,21 @@ public:
                     throw std::runtime_error("NEW_OBJ opcode: object is not a Class");
                 }
 
-                auto class_instance = class_ptr->instantiate();
+                /* TODO : if (!class_prt->local){
+                 *    this->run(class_ptr->bytecode);
+                 * }
+                 */
+                auto class_instance = class_ptr;
                 this->op_stack.emplace(class_instance);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::SET_FIELD)) {
-                int field_name_addr = std::get<int>(current_code[this->pc]);
+            case Opcode::SET_FIELD: {
+                int field_addr = current_code[this->pc];
                 this->pc += 1;
 
-                MixedType field_name = this->constant_pool[field_name_addr];
-                if(!std::holds_alternative<std::string>(field_name)) {
-                    throw std::runtime_error("SET_FIELD opcode: invalid field name type");
-                }
-
-                MixedType value = this->op_stack.top();
+                ItemOfStack value = this->op_stack.top();
                 this->op_stack.pop();
-                MixedType obj = this->op_stack.top();
+                ItemOfStack obj = this->op_stack.top();
                 this->op_stack.pop();
 
                 // 检查是否为 shared_ptr<ZataObject>
@@ -363,23 +392,25 @@ public:
                 auto ptr = std::get<std::shared_ptr<ZataObject>>(obj);
 
                 // 转换为 Instanced 指针
-                auto instance = std::dynamic_pointer_cast<Instanced>(ptr);
+                auto instance = std::dynamic_pointer_cast<ZataInstanced>(ptr);
                 if (!instance) {
                     throw std::runtime_error("SET_FIELD opcode: object is not an instance");
                 }
 
                 // 设置字段值
-                instance->set_field(std::get<std::string>(field_name), value);
+                // TODO: ...
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::GET_FIELD)) {
+            case Opcode::GET_FIELD: {
                 // TODO:...
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::CALL_METHOD)) {
-                int fn_addr = std::get<int>(current_code[this->pc]);
-                int arg_count = std::get<int>(current_code[this->pc + 1]);
+            case Opcode::CALL_METHOD: {
+                int fn_addr = current_code[this->pc];
+                int arg_count = current_code[this->pc + 1];
                 this->pc += 2;
 
-                MixedType fn = this->constant_pool[fn_addr];
+                ItemOfStack fn = this->constant_pool[fn_addr];
 
                 // 检查函数是否为 ZataObject 智能指针
                 if (!std::holds_alternative<std::shared_ptr<ZataObject>>(fn)) {
@@ -388,13 +419,13 @@ public:
                 auto zata_obj_ptr = std::get<std::shared_ptr<ZataObject>>(fn);
 
                 // 转换为 Function 类型
-                auto fn_ptr = std::dynamic_pointer_cast<Function>(zata_obj_ptr);
+                auto fn_ptr = std::dynamic_pointer_cast<ZataFunction>(zata_obj_ptr);
                 if (!fn_ptr) {
                     throw std::runtime_error("CALL_METHOD opcode: object is not a Function");
                 }
 
                 // 提取栈中的实例对象（this 指针）
-                MixedType obj = this->op_stack.top();
+                ItemOfStack obj = this->op_stack.top();
                 this->op_stack.pop();
                 if (!std::holds_alternative<std::shared_ptr<ZataObject>>(obj)) {
                     throw std::runtime_error("CALL_METHOD opcode: top of stack is not an object");
@@ -402,19 +433,19 @@ public:
 
                 // 将对象指针转换为 Instanced 实例
                 auto obj_ptr = std::get<std::shared_ptr<ZataObject>>(obj);
-                auto instance = std::dynamic_pointer_cast<Instanced>(obj_ptr);
+                auto instance = std::dynamic_pointer_cast<ZataInstanced>(obj_ptr);
                 if (!instance) {
                     throw std::runtime_error("CALL_METHOD opcode: object is not an instance");
                 }
 
                 // 查找方法
-                auto method = instance->get_method(fn_ptr->name);  // 注意使用 -> 调用指针方法
+                /* TODO ...
                 if (!method) {
-                    throw std::runtime_error("CALL_METHOD opcode: method not found: " + fn_ptr->name);
+                    throw std::runtime_error("CALL_METHOD opcode: method not found: " + fn_ptr->function_name);
                 }
 
                 // 处理函数参数
-                std::vector<MixedType> args;
+                std::vector<ItemOfStack> args;
                 for (int i = 0; i < arg_count; ++i) {
                     args.push_back(this->op_stack.top());
                     this->op_stack.pop();
@@ -422,7 +453,7 @@ public:
                 std::ranges::reverse(args);  // 反转参数顺序以匹配声明顺序
 
                 // 准备函数局部变量（包含实例对象作为第一个参数，即 this）
-                std::vector<MixedType> fns_locals;
+                std::vector<ItemOfStack> fns_locals;
                 fns_locals.reserve(arg_count + 1);
                 fns_locals.push_back(obj);  // 将实例对象作为第一个局部变量（this）
                 for (int i = 0; i < arg_count; ++i) {
@@ -439,80 +470,89 @@ public:
                 // 切换到新函数
                 this->locals = fns_locals;
                 this->current_function.push(*method);  // 注意：应压入查找到的 method 而非原 fn_ptr
-                this->pc = 0;
+                this->pc = 0;*/
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::PUSH)) {
-                MixedType num = current_code[this->pc];
-                this->pc += 1;
-                this->op_stack.emplace(num);
-            }
-            else if(opcode == static_cast<int>(Opcode::POP)) {
+            case Opcode::POP: {
                 if(!this->op_stack.empty()) {
                     this->op_stack.pop();
                 } else {
                     throw std::runtime_error("POP opcode: stack underflow");
                 }
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::DUP)) {
+            case Opcode::DUP: {
                 if(!this->op_stack.empty()) {
-                    MixedType a = this->op_stack.top();
+                    ItemOfStack a = this->op_stack.top();
                     this->op_stack.emplace(a);
                 } else {
                     throw std::runtime_error("DUP opcode: stack underflow");
                 }
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::ALLOC)) {
+            case Opcode::ALLOC: {
                 //TODO:...
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::FREE)) {
+            case Opcode::FREE: {
                 //TODO:...
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::LOAD_MEM)) {
+            case Opcode::LOAD_MEM: {
                 //TODO:...
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::STORE_MEM)) {
+            case Opcode::STORE_MEM: {
                 //TODO:...
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::BIT_AND)) {
+            case Opcode::BIT_AND: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a & b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::BIT_OR)) {
+            case Opcode::BIT_OR: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a | b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::BIT_XOR)) {
+            case Opcode::BIT_XOR: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a ^ b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::SHL)) {
+            case Opcode::SHL: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a << b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::SHR)) {
+            case Opcode::SHR: {
                 auto b = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 auto a = std::get<int>(this->op_stack.top());
                 this->op_stack.pop();
                 this->op_stack.emplace(a >> b);
+                break;
             }
-            else if(opcode == static_cast<int>(Opcode::HALT)) {
+            case Opcode::HALT: {
                 this->running = false;
+                break;
             }
-            else {
+            default: {
                 throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
+            }
             }
         }
 
