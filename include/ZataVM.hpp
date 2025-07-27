@@ -492,20 +492,10 @@ public:
                 }
                 break;
             }
-                        // 内存操作指令（已实现）
             case Opcode::ALLOC: {
-                // 功能：分配内存块，返回地址
-                // 栈输入：[size]（要分配的内存大小，int类型）
-                // 栈输出：[address]（分配的内存地址，uint64_t）
-
-                // 检查栈是否有足够元素
-                if (op_stack.empty()) {
-                    throw std::runtime_error("ALLOC opcode: stack underflow (need size)");
-                }
-
-                // 获取分配大小（假设是int类型）
-                ItemOfStack size_item = op_stack.top();
-                op_stack.pop();
+                // ToDo : Make sure use stack or code
+                ItemOfStack size_item = current_code[this->pc];
+                this->pc += 1;
                 if (!std::holds_alternative<int>(size_item)) {
                     throw std::runtime_error("ALLOC opcode: size must be integer");
                 }
@@ -514,27 +504,15 @@ public:
                     throw std::runtime_error("ALLOC opcode: size must be positive");
                 }
 
-                // 生成唯一地址（简单自增策略）
                 uint64_t addr = next_memory_address;
-                next_memory_address += size;  // 地址偏移，模拟连续内存块
+                next_memory_address += size;
 
-                // 在内存中预留空间（存储一个空值作为占位）
-                memory[addr] = ItemOfStack{};  // 或存储实际初始化数据
+                memory[addr] = ItemOfStack{};
 
-                // 将分配的地址压入栈
                 op_stack.emplace(addr);
                 break;
             }
             case Opcode::FREE: {
-                // 功能：释放指定地址的内存块
-                // 栈输入：[address]（要释放的地址，uint64_t）
-                // 栈输出：无
-
-                if (op_stack.empty()) {
-                    throw std::runtime_error("FREE opcode: stack underflow (need address)");
-                }
-
-                // 获取要释放的地址
                 ItemOfStack addr_item = op_stack.top();
                 op_stack.pop();
                 if (!std::holds_alternative<uint64_t>(addr_item)) {
