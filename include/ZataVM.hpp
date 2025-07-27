@@ -7,12 +7,13 @@
 #include <stack>
 #include <string>
 #include <memory>
+#include <unordered_map>
 #include <variant>
 #include "Objects.hpp"
 
 #include "ZvmOpcodes.hpp"
 
-using ItemOfStack = std::variant<int, bool, std::string, std::shared_ptr<ZataObject>>;
+using ItemOfStack = std::variant<int, bool, std::string, std::shared_ptr<ZataObject>, uint64_t>;
 
 // 调用帧
 struct CallFrame {
@@ -33,13 +34,14 @@ class ZataVirtualMachine {
 
     std::vector<codeMember> code;
     std::stack<ZataFunction> current_function;
+    std::unordered_map<uint64_t, ItemOfStack> memory;
+    uint64_t next_memory_address = 0x1000;  // 从0x1000开始（避开低地址）
     int pc = 0;
     bool running = false;
 
 public:
     ZataVirtualMachine()
         : pc(0) {
-        // 初始化容器（可选，STL容器默认会自动初始化）
         op_stack = std::stack<ItemOfStack>();
         call_stack = std::stack<CallFrame>();
         locals.clear();
@@ -490,20 +492,119 @@ public:
                 }
                 break;
             }
+                        // 内存操作指令（已实现）
             case Opcode::ALLOC: {
-                //TODO:...
+                // 功能：分配内存块，返回地址
+                // 栈输入：[size]（要分配的内存大小，int类型）
+                // 栈输出：[address]（分配的内存地址，uint64_t）
+
+                // 检查栈是否有足够元素
+                if (op_stack.empty()) {
+                    throw std::runtime_error("ALLOC opcode: stack underflow (need size)");
+                }
+
+                // 获取分配大小（假设是int类型）
+                ItemOfStack size_item = op_stack.top();
+                op_stack.pop();
+                if (!std::holds_alternative<int>(size_item)) {
+                    throw std::runtime_error("ALLOC opcode: size must be integer");
+                }
+                int size = std::get<int>(size_item);
+                if (size <= 0) {
+                    throw std::runtime_error("ALLOC opcode: size must be positive");
+                }
+
+                // 生成唯一地址（简单自增策略）
+                uint64_t addr = next_memory_address;
+                next_memory_address += size;  // 地址偏移，模拟连续内存块
+
+                // 在内存中预留空间（存储一个空值作为占位）
+                memory[addr] = ItemOfStack{};  // 或存储实际初始化数据
+
+                // 将分配的地址压入栈
+                op_stack.emplace(addr);
                 break;
             }
             case Opcode::FREE: {
-                //TODO:...
+                // 功能：释放指定地址的内存块
+                // 栈输入：[address]（要释放的地址，uint64_t）
+                // 栈输出：无
+
+                if (op_stack.empty()) {
+                    throw std::runtime_error("FREE opcode: stack underflow (need address)");
+                }
+
+                // 获取要释放的地址
+                ItemOfStack addr_item = op_stack.top();
+                op_stack.pop();
+                if (!std::holds_alternative<uint64_t>(addr_item)) {
+                    throw std::runtime_error("FREE opcode: address must be uint64_t");
+                }
+                uint64_t addr = std::get<uint64_t>(addr_item);
+
+                // 检查地址是否存在
+                if (memory.find(addr) == memory.end()) {
+                    throw std::runtime_error("FREE opcode: invalid address (not allocated)");
+                }
+
+                // 释放内存（从map中删除）
+                memory.erase(addr);
                 break;
             }
             case Opcode::LOAD_MEM: {
-                //TODO:...
+                // 功能：从指定地址加载数据到栈
+                // 栈输入：[address]（要读取的地址，uint64_t）
+                // 栈输出：[value]（地址中存储的数据）
+
+                if (op_stack.empty()) {
+                    throw std::runtime_error("LOAD_MEM opcode: stack underflow (need address)");
+                }
+
+                // 获取地址
+                ItemOfStack addr_item = op_stack.top();
+                op_stack.pop();
+                if (!std::holds_alternative<uint64_t>(addr_item)) {
+                    throw std::runtime_error("LOAD_MEM opcode: address must be uint64_t");
+                }
+                uint64_t addr = std::get<uint64_t>(addr_item);
+
+                // 检查地址是否存在
+                if (memory.find(addr) == memory.end()) {
+                    throw std::runtime_error("LOAD_MEM opcode: invalid address (not allocated)");
+                }
+
+                // 将地址中的数据压入栈
+                ItemOfStack value = memory[addr];
+                op_stack.emplace(value);
                 break;
             }
             case Opcode::STORE_MEM: {
-                //TODO:...
+                // 功能：将栈顶数据存储到指定地址
+                // 栈输入：[value, address]（先弹出value，再弹出address）
+                // 栈输出：无
+
+                if (op_stack.size() < 2) {
+                    throw std::runtime_error("STORE_MEM opcode: stack underflow (need value and address)");
+                }
+
+                // 弹出值和地址（注意栈的顺序：先弹值，再弹地址）
+                ItemOfStack value = op_stack.top();
+                op_stack.pop();
+                ItemOfStack addr_item = op_stack.top();
+                op_stack.pop();
+
+                if (!std::holds_alternative<uint64_t>(addr_item)) {
+                    throw std::runtime_error("STORE_MEM opcode: address must be uint64_t");
+                }
+                uint64_t addr = std::get<uint64_t>(addr_item);
+
+                // 检查地址是否已分配（也可允许存储到新地址，视需求而定）
+                if (memory.find(addr) == memory.end()) {
+                    throw std::runtime_error("STORE_MEM opcode: invalid address (not allocated)");
+                }
+
+                // 存储数据到内存
+                memory[addr] = value;
                 break;
             }
             case Opcode::BIT_AND: {
