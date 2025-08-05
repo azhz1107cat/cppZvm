@@ -7,17 +7,17 @@
 #include "utils.hpp"
 
 
-std::vector<ItemOfStack> execute_bytecode(
-    const std::vector<codeMember>& bytecode,
-    const std::vector<ItemOfStack>& constants
+std::vector<ZataElem> execute_bytecode(
+    const std::vector<int>& bytecode,
+    const std::vector<ZataElem>& constants
 ) {
 
-    enable_ansi_escape();
+    Utils::enable_ansi_escape();
     ZataVirtualMachine vm(constants);
     const auto current_stack = vm.run(bytecode);
 
     // 转换为vector返回给Python
-    return stack_to_vector(current_stack);
+    return Utils::stack_to_vector(current_stack);
 }
 
 

@@ -9,50 +9,6 @@ struct ZataError {
     std::string message;
     int error_code = 0;
     std::string name = "ZataError";
-
-    // 构造函数方便初始化
-    explicit ZataError(std::string msg = "", int code = 0)
-        : message(std::move(msg)), error_code(code) {}
-};
-
-struct ZataCallStackError : public ZataError {
-    std::string name = "ZataCallStackError";
-    using ZataError::ZataError; // 继承构造函数
-};
-
-struct ZataOpStackError : public ZataError {
-    std::string name = "ZataOpStackError";
-    using ZataError::ZataError;
-};
-
-struct ZataCalcError : public ZataError {
-    std::string name = "ZataCalcError";
-    using ZataError::ZataError;
-};
-
-struct ZataRuntimeError : public ZataError {
-    std::string name = "ZataRuntimeError";
-    using ZataError::ZataError;
-};
-
-struct ZataMemoryError : public ZataError {
-    std::string name = "ZataMemoryError";
-    using ZataError::ZataError;
-};
-
-struct ZataIOError : public ZataError {
-    std::string name = "ZataIOError";
-    using ZataError::ZataError;
-};
-
-struct ZataBytesCodeError : public ZataError {
-    std::string name = "ZataBytesCodeError";
-    using ZataError::ZataError;
-};
-
-struct ZataTypeError : public ZataError {
-    std::string name = "ZataTypeError";
-    using ZataError::ZataError;
 };
 
 namespace Fore {
@@ -90,8 +46,7 @@ inline void zata_vm_error_thrower(std::stack<CallFrame> current_call_stack,
     }
 
     std::cout << "-- [ Infos ] --" << std::endl;
-    std::cout << error_class.name << "[" <<error_class.error_code << "]"
-    << ":" << error_class.message << std::endl;
+    std::cout << error_class.name << ":" << error_class.message << "err_code=" <<error_class.error_code<< std::endl;
 
     std::cout << "-- [ End ] --" << std::endl;
 };

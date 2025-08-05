@@ -7,23 +7,23 @@
 
 namespace Opcode {
     // 算术运算
-    constexpr int ADD = 0x01;   // 加法 a+b
-    constexpr int SUB = 0x02;   // 减法 a-b
-    constexpr int MUL = 0x03;   // 乘法 a*b
-    constexpr int DIV = 0x04;   // 除法 a/b
-    constexpr int MOD = 0x05;   // 取模 a%b
-    constexpr int NEG = 0x06;   // 取相反数 -a
-
-    // 逻辑运算
-    constexpr int EQ_EQ = 0x10; // 等于 a==b
-    constexpr int NE = 0x11;    // 不等于 a!=b
-    constexpr int LT = 0x12;    // 小于 a<b
-    constexpr int GT = 0x13;    // 大于 a>b
-    constexpr int LE = 0x14;    // 小于等于 a<=b
-    constexpr int GE = 0x15;    // 大于等于 a>=b
-    constexpr int AND = 0x16;   // 逻辑与 a&&b
-    constexpr int OR = 0x17;    // 逻辑或 a||b
-    constexpr int NOT = 0x18;   // 逻辑非 !a
+    constexpr int CALC = 0x01;   // 加法 a+b
+    // constexpr int SUB = 0x02;   // 减法 a-b
+    // constexpr int MUL = 0x03;   // 乘法 a*b
+    // constexpr int DIV = 0x04;   // 除法 a/b
+    // constexpr int MOD = 0x05;   // 取模 a%b
+    // constexpr int NEG = 0x06;   // 取相反数 -a
+    //
+    // // 逻辑运算
+    // constexpr int EQ_EQ = 0x10; // 等于 a==b
+    // constexpr int NE = 0x11;    // 不等于 a!=b
+    // constexpr int LT = 0x12;    // 小于 a<b
+    // constexpr int GT = 0x13;    // 大于 a>b
+    // constexpr int LE = 0x14;    // 小于等于 a<=b
+    // constexpr int GE = 0x15;    // 大于等于 a>=b
+    // constexpr int AND = 0x16;   // 逻辑与 a&&b
+    // constexpr int OR = 0x17;    // 逻辑或 a||b
+    // constexpr int NOT = 0x18;   // 逻辑非 !a
 
     // 加载/存储指令
     constexpr int LOAD_CONST = 0x20;  // 从常量池加载常量到栈
@@ -58,12 +58,12 @@ namespace Opcode {
     constexpr int LOAD_MEM = 0x52;    // 从内存加载
     constexpr int STORE_MEM = 0x53;   // 存储到内存
 
-    // 二进制
-    constexpr int BIT_AND = 0x70; // 按位与
-    constexpr int BIT_OR = 0x71;  // 按位或
-    constexpr int BIT_XOR = 0x72; // 按位异或
-    constexpr int SHL = 0x73;     // 左移
-    constexpr int SHR = 0x74;     // 右移
+    // // 二进制
+    // constexpr int BIT_AND = 0x70; // 按位与
+    // constexpr int BIT_OR = 0x71;  // 按位或
+    // constexpr int BIT_XOR = 0x72; // 按位异或
+    // constexpr int SHL = 0x73;     // 左移
+    // constexpr int SHR = 0x74;     // 右移
 
     // 特殊指令
     constexpr int HALT = 0xFF;     // 终止执行
