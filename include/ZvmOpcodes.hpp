@@ -7,14 +7,22 @@
 
 namespace Opcode {
     // 算术运算
-    constexpr int CALC = 0x01;   // 加法 a+b
+    // constexpr int CALC = 0x00;
+    // constexpr int ADD = 0x01    // 加法 a+b
     // constexpr int SUB = 0x02;   // 减法 a-b
     // constexpr int MUL = 0x03;   // 乘法 a*b
     // constexpr int DIV = 0x04;   // 除法 a/b
     // constexpr int MOD = 0x05;   // 取模 a%b
     // constexpr int NEG = 0x06;   // 取相反数 -a
-    //
-    // // 逻辑运算
+
+    // 二进制
+    // constexpr int BIT_AND = 0x70; // 按位与
+    // constexpr int BIT_OR = 0x71;  // 按位或
+    // constexpr int BIT_XOR = 0x72; // 按位异或
+    // constexpr int SHL = 0x73;     // 左移
+    // constexpr int SHR = 0x74;     // 右移
+
+    // 逻辑运算
     // constexpr int EQ_EQ = 0x10; // 等于 a==b
     // constexpr int NE = 0x11;    // 不等于 a!=b
     // constexpr int LT = 0x12;    // 小于 a<b
@@ -57,13 +65,6 @@ namespace Opcode {
     constexpr int FREE = 0x51;        // 释放内存
     constexpr int LOAD_MEM = 0x52;    // 从内存加载
     constexpr int STORE_MEM = 0x53;   // 存储到内存
-
-    // // 二进制
-    // constexpr int BIT_AND = 0x70; // 按位与
-    // constexpr int BIT_OR = 0x71;  // 按位或
-    // constexpr int BIT_XOR = 0x72; // 按位异或
-    // constexpr int SHL = 0x73;     // 左移
-    // constexpr int SHR = 0x74;     // 右移
 
     // 特殊指令
     constexpr int HALT = 0xFF;     // 终止执行

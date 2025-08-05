@@ -7,6 +7,7 @@
 #include <any>
 #include <memory>
 
+
 // 基类
 struct ZataObject {
     virtual ~ZataObject() = default;
@@ -60,6 +61,11 @@ struct ZataInt final : ZataObject {
     int value;
 };
 
+// 长整数
+struct ZataLongInt final : ZataObject {
+    long long value;
+};
+
 // 浮点数对象
 struct ZataFloat final : ZataObject {
     double value;
@@ -72,5 +78,22 @@ struct ZataBool final : ZataObject {
     // 4 => Nofound
     int value;
 };
+
+// 调用帧
+struct CallFrame {
+    int pc = 0;
+    std::vector<ZataElem> locals;
+    int return_address = 0;
+    std::string function_name;
+    std::vector<ZataElem> constant_pool;
+    std::vector<int> code;
+};
+
+// 内存帧
+struct Allocation {
+    uint64_t size;
+    ZataElem data;
+};
+
 
 #endif // ZATA_OBJECTS_H

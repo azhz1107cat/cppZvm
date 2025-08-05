@@ -2,28 +2,16 @@
 #define ZATA_VM_H
 
 #include <algorithm>
-#include <array>
 #include <vector>
 #include <stack>
 #include <string>
 #include <memory>
 #include <unordered_map>
-#include <variant>
 
 #include "Errors.hpp"
 #include "Objects.hpp"
 
 #include "ZvmOpcodes.hpp"
-
-// 调用帧
-struct CallFrame {
-     int pc = 0;
-     std::vector<ZataElem> locals;
-     int return_address = 0;
-     std::string function_name;
-     std::vector<ZataElem> constant_pool;
-     std::vector<int> code;
-};
 
 // 虚拟机
 class ZataVirtualMachine {
@@ -36,7 +24,7 @@ class ZataVirtualMachine {
 
     std::vector<int> code;
     std::stack<std::shared_ptr<ZataFunction>> current_function;
-    std::unordered_map<size_t, std::shared_ptr<ZataInstance>> memory;
+    std::unordered_map<uint64_t, Allocation> memory;
     uint64_t next_memory_address = 0x1000;  // 避开低地址
     int pc = 0;
     bool running = false;
@@ -132,7 +120,11 @@ public:
                 if(bool_obj_ptr) {
                     condition = bool_obj_ptr->value;
                 }else {
-                    zata_vm_error_thrower();
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "Top of the stack is not a bool object",
+                        .error_code = 0
+                    });
                 }
 
                 if (condition != 1) {
@@ -152,7 +144,11 @@ public:
                 if(bool_obj_ptr) {
                     condition = bool_obj_ptr->value;
                 }else {
-                    zata_vm_error_thrower();
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "Top of the stack is not a bool object",
+                        .error_code = 0
+                    });
                 }
 
                 if (condition == 1) {
@@ -174,13 +170,21 @@ public:
                 ZataElem fn = this->constant_pool[fn_addr];
 
                 if (!std::dynamic_pointer_cast<ZataFunction>(fn)) {
-                    zata_vm_error_thrower("CALL opcode: function is not a ZataObject");
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "CALL opcode: function is not a ZataObject",
+                        .error_code = 0
+                    });
                 }
 
                 auto fn_ptr = std::dynamic_pointer_cast<ZataFunction>(fn);
 
                 if (!fn_ptr) {
-                    zata_vm_error_thrower("CALL opcode: object is not a Function");
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "CALL opcode: object is not a Function",
+                        .error_code = 0
+                    });
                 }
 
                 std::vector<int> function_code = fn_ptr->bytecode;
@@ -229,7 +233,11 @@ public:
                         this->current_function.pop();
                     }
                 } else {
-                    zata_vm_error_thrower("RET opcode: call stack is empty");
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "RET opcode: call stack is empty",
+                        .error_code = 0
+                    });
                 }
                 break;
             }
@@ -263,7 +271,11 @@ public:
 
                 std::shared_ptr<ZataInstance> instance = std::dynamic_pointer_cast<ZataInstance>(obj);
                 if (!instance) {
-                    zata_vm_error_thrower("SET_FIELD opcode: object is not an Instance");
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "SET_FIELD opcode: object is not an Instance",
+                        .error_code = 0
+                    });
                 }
                 instance->fields[field_addr] = value;
                 break;
@@ -288,7 +300,11 @@ public:
                     break;
                 }
 
-                zata_vm_error_thrower("GET_FIELD: object is not ZataInstance or ZataClass");
+                zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "GET_FIELD: object is not ZataInstance or ZataClass",
+                        .error_code = 0
+                    });
                 break;
             }
             case Opcode::CALL_METHOD: {
@@ -300,7 +316,11 @@ public:
                 std::shared_ptr<ZataFunction> fn_ptr = std::dynamic_pointer_cast<ZataFunction>(fn);
 
                 if (!fn_ptr) {
-                    zata_vm_error_thrower("CALL_METHOD opcode: function is not a zata function");
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "CALL_METHOD opcode: function is not a zata function",
+                        .error_code = 0
+                    });
                 }
 
                 ZataElem obj = this->op_stack.top();
@@ -308,7 +328,11 @@ public:
 
                 std::shared_ptr<ZataInstance> instance = std::dynamic_pointer_cast<ZataInstance>(obj);
                 if (!instance) {
-                    zata_vm_error_thrower("CALL_METHOD opcode: top of stack is not an object");
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "CALL_METHOD opcode: top of stack is not an object",
+                        .error_code = 0
+                    });
                 }
 
                 // 处理函数参数
@@ -347,7 +371,11 @@ public:
                 if(!this->op_stack.empty()) {
                     this->op_stack.pop();
                 } else {
-                    zata_vm_error_thrower("POP opcode: stack underflow");
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "POP opcode: stack underflow",
+                        .error_code = 0
+                    });
                 }
                 break;
             }
@@ -356,109 +384,145 @@ public:
                     ZataElem a = this->op_stack.top();
                     this->op_stack.emplace(a);
                 } else {
-                    zata_vm_error_thrower("DUP opcode: stack underflow");
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "DUP opcode: stack underflow",
+                        .error_code = 0
+                    });
                 }
                 break;
             }
-            /*case Opcode::ALLOC: {
-                // ToDo : Make sure use stack or code
-                ZataElem size_item = current_code[this->pc];
+            case Opcode::ALLOC: {
+                int size_idx = current_code[this->pc];
                 this->pc += 1;
-                if (!std::holds_alternative<int>(size_item)) {
-                    throw std::runtime_error("ALLOC opcode: size must be integer");
+
+                ZataElem size_elem = this->constant_pool[size_idx];
+                auto size_obj = std::dynamic_pointer_cast<ZataInt>(size_elem);
+                if (!size_obj) {
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "ALLOC: size must be a ZataInt",
+                        .error_code = 0
+                    });
                 }
-                int size = std::get<int>(size_item);
+
+                int size = size_obj->value;
                 if (size <= 0) {
-                    throw std::runtime_error("ALLOC opcode: size must be positive");
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "ALLOC: size must be positive",
+                        .error_code = 0
+                    });
                 }
 
+                // 分配内存
                 uint64_t addr = next_memory_address;
-                next_memory_address += size;
+                next_memory_address += size;  // 预留连续空间
+                memory[addr] = Allocation{
+                    .size = static_cast<uint64_t>(size),
+                    .data = nullptr
+                };
+                auto zata_long_int = std::make_shared<ZataLongInt>();
+                zata_long_int->value = addr;
 
-                memory[addr] = ZataElem{};
+                op_stack.emplace(zata_long_int);
 
-                op_stack.emplace(addr);
                 break;
             }
+
             case Opcode::FREE: {
-                ZataElem addr_item = op_stack.top();
+                ZataElem addr_elem = op_stack.top();
                 op_stack.pop();
-                if (!std::holds_alternative<uint64_t>(addr_item)) {
-                    throw std::runtime_error("FREE opcode: address must be uint64_t");
+                auto addr_obj = std::dynamic_pointer_cast<ZataLongInt>(addr_elem);
+                if (!addr_obj) {
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "FREE: address must be a ZataLongInt (long long)",
+                        .error_code = 0
+                    });
                 }
-                uint64_t addr = std::get<uint64_t>(addr_item);
+                auto addr = static_cast<uint64_t>(addr_obj->value);
 
-                // 检查地址是否存在
                 if (!memory.contains(addr)) {
-                    throw std::runtime_error("FREE opcode: invalid address (not allocated)");
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "FREE: invalid address (not an allocated start address)",
+                        .error_code = 0
+                    });
                 }
 
-                // 释放内存（从map中删除）
                 memory.erase(addr);
                 break;
             }
+
             case Opcode::LOAD_MEM: {
-                // 功能：从指定地址加载数据到栈
-                // 栈输入：[address]（要读取的地址，uint64_t）
-                // 栈输出：[value]（地址中存储的数据）
-
-                if (op_stack.empty()) {
-                    throw std::runtime_error("LOAD_MEM opcode: stack underflow (need address)");
-                }
-
-                // 获取地址
-                ZataElem addr_item = op_stack.top();
+                ZataElem addr_elem = op_stack.top();
                 op_stack.pop();
-                if (!std::holds_alternative<uint64_t>(addr_item)) {
-                    throw std::runtime_error("LOAD_MEM opcode: address must be uint64_t");
+                auto addr_obj = std::dynamic_pointer_cast<ZataLongInt>(addr_elem);
+                if (!addr_obj) {
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "LOAD_MEM: address must be a ZataLongInt (long long)",
+                        .error_code = 0
+                    });
                 }
-                uint64_t addr = std::get<uint64_t>(addr_item);
+                auto addr = static_cast<uint64_t>(addr_obj->value);
 
-                // 检查地址是否存在
-                if (!memory.contains(addr)) {
-                    throw std::runtime_error("LOAD_MEM opcode: invalid address (not allocated)");
+                auto it = memory.find(addr);
+                if (it == memory.end()) {
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "LOAD_MEM: address not allocated",
+                        .error_code = 0
+                    });
                 }
 
                 // 将地址中的数据压入栈
-                ZataElem value = memory[addr];
+                ZataElem value = it->second.data;
                 op_stack.emplace(value);
                 break;
             }
+
             case Opcode::STORE_MEM: {
-                // 功能：将栈顶数据存储到指定地址
-                // 栈输入：[value, address]（先弹出value，再弹出address）
-                // 栈输出：无
-
-                if (op_stack.size() < 2) {
-                    throw std::runtime_error("STORE_MEM opcode: stack underflow (need value and address)");
-                }
-
-                // 弹出值和地址（注意栈的顺序：先弹值，再弹地址）
                 ZataElem value = op_stack.top();
                 op_stack.pop();
-                ZataElem addr_item = op_stack.top();
+
+                ZataElem addr_elem = op_stack.top();
                 op_stack.pop();
 
-                if (!std::holds_alternative<uint64_t>(addr_item)) {
-                    throw std::runtime_error("STORE_MEM opcode: address must be uint64_t");
+                auto addr_obj = std::dynamic_pointer_cast<ZataLongInt>(addr_elem);
+                if (!addr_obj) {
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "STORE_MEM: address must be a ZataLongInt (long long)",
+                        .error_code = 0
+                    });
                 }
-                uint64_t addr = std::get<uint64_t>(addr_item);
+                auto addr = static_cast<uint64_t>(addr_obj->value);
 
-                // 检查地址是否已分配（也可允许存储到新地址，视需求而定）
-                if (!memory.contains(addr)) {
-                    throw std::runtime_error("STORE_MEM opcode: invalid address (not allocated)");
+                // 检查地址是否已分配
+                auto it = memory.find(addr);
+                if (it == memory.end()) {
+                    zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "STORE_MEM: address not allocated",
+                        .error_code = 0
+                    });
                 }
 
-                // 存储数据到内存
-                memory[addr] = value;
+                it->second.data = value;
                 break;
-            }*/
+            }
             case Opcode::HALT: {
                 this->running = false;
                 break;
             }
             default: {
-                zata_vm_error_thrower("Unknown opcode: " + std::to_string(opcode));
+                zata_vm_error_thrower(this->call_stack ,ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "Unknown opcode: " + std::to_string(opcode),
+                        .error_code = 0
+                    });
             }
             }
         }

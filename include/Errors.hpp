@@ -3,7 +3,8 @@
 #include <iostream>
 #include <stack>
 #include <string>
-#include "ZataVM.hpp"
+
+#include "Objects.hpp"
 
 struct ZataError {
     std::string message;

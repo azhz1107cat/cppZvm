@@ -13,6 +13,7 @@ std::vector<ZataElem> execute_bytecode(
 ) {
 
     Utils::enable_ansi_escape();
+
     ZataVirtualMachine vm(constants);
     const auto current_stack = vm.run(bytecode);
 
