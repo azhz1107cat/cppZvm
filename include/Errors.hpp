@@ -7,9 +7,9 @@
 #include "Objects.hpp"
 
 struct ZataError {
+    std::string name = "ZataError";
     std::string message;
     int error_code = 0;
-    std::string name = "ZataError";
 };
 
 namespace Fore {

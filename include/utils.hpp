@@ -1,13 +1,15 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 #include <fstream>
+#include <windows.h>
 
 #include "ZataVM.hpp"
 
+
 namespace Utils {
     // 将stack转换为vector
-    inline std::vector<ItemOfStack> stack_to_vector(const std::stack<ItemOfStack>& stack) {
-        std::vector<ItemOfStack> result;
+    inline std::vector<ZataElem> stack_to_vector(const std::stack<ZataElem>& stack) {
+        std::vector<ZataElem> result;
         auto temp_stack = stack;
 
         while (!temp_stack.empty()) {
@@ -46,7 +48,6 @@ namespace Utils {
 
     inline void enable_ansi_escape() {
     #ifdef _WIN32
-    #include <windows.h>
         HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
         if (hOut == INVALID_HANDLE_VALUE) return;
 

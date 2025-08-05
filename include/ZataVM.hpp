@@ -205,10 +205,11 @@ public:
                 CallFrame frame{
                     .pc = this->pc,
                     .locals = this->locals,
-                    .code = this->code,
                     .return_address = this->pc,
                     .function_name = fn_ptr->function_name,
-                    .constant_pool = this->constant_pool
+                    .constant_pool = this->constant_pool,
+                    .code = this->code,
+
                 };
                 this->call_stack.push(frame);
 
@@ -353,10 +354,10 @@ public:
                 CallFrame frame{
                     .pc = this->pc,
                     .locals = this->locals,
-                    .code = this->code,
                     .return_address = this->pc,
                     .function_name = fn_ptr->function_name,
-                    .constant_pool = this->constant_pool
+                    .constant_pool = this->constant_pool,
+                    .code = this->code,
                 };
                 this->call_stack.push(frame);
 

@@ -27,5 +27,6 @@ PYBIND11_MODULE(cppZvm, m) {
 
     m.def("execute_bytecode", &execute_bytecode,
           "执行字节码并返回最终栈状态或错误时栈状态",
-          pybind11::arg("bytecode"));
+          pybind11::arg("bytecode"),
+          pybind11::arg("constants"));
 }
