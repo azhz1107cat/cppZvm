@@ -10,6 +10,7 @@
 
 #include "Errors.hpp"
 #include "Objects.hpp"
+#include "ZataBuiltins.hpp"
 
 #include "ZvmOpcodes.hpp"
 
@@ -199,6 +200,8 @@ public:
                 for(int i = 0; i < arg_count; ++i) {
                     fns_locals[i] = args[i];
                 }
+
+                if (fn_ptr->function_name == "print"){zata_print(args);}
 
                 CallFrame frame{
                     .pc = this->pc,

@@ -1,6 +1,3 @@
-#ifndef ZVM_OPCODES_H
-#define ZVM_OPCODES_H
-
 #ifndef OPCODE_H
 #define OPCODE_H
 
@@ -71,6 +68,3 @@ namespace Opcode {
 }
 
 #endif // OPCODE_H
-
-
-#endif // ZVM_OPCODES_H

@@ -4,28 +4,38 @@
 #include <iostream>
 #include <windows.h>
 
-extern "C" inline void zata_print(const std::string& values,
-    const std::string& sep,
-    const std::string& end) {
-
-    std::cout << values << sep << end;
+extern "C" inline void zata_print(const std::vector<ZataElem>& arguments) {
+    const auto target_text = std::dynamic_pointer_cast<ZataString>(arguments[0]);
+    if (!target_text) {
+        zata_vm_error_thrower({},ZataError{
+                        .name = "ZataRunTimeError",
+                        .message = "Can't not print a object without __str__ method",
+                        .error_code = 0
+                    });
+    }
+    std::cout << target_text << std::endl;
 }
 
-extern "C" inline std::string zata_input(const std::string& proper) {
-    std::cout << proper;
+extern "C" inline ZataString zata_input(const std::vector<ZataElem>& arguments) {
+    std::cout << arguments[0];
     std::string input;
     std::getline(std::cin, input);
-    return input;
+    auto result = ZataString();
+    result.val = input;
+    return result;
 }
 
-extern "C" inline float now() {
+extern "C" inline ZataFloat zata_now(const std::vector<ZataElem>& arguments) {
     #ifdef _WIN32
     LARGE_INTEGER freq;
     LARGE_INTEGER counter;
     QueryPerformanceFrequency(&freq);
     QueryPerformanceCounter(&counter);
     // 转换为秒（计数器值 / 频率）
-    return (float)((double)counter.QuadPart / (double)freq.QuadPart);
+    auto second = (float)((double)counter.QuadPart / (double)freq.QuadPart);
+    auto result = ZataFloat();
+    result.val = second;
+    return result;
 
     #else
     // 类 Unix 平台

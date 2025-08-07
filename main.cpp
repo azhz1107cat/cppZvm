@@ -5,6 +5,7 @@
 
 #include "Errors.hpp"
 #include "utils.hpp"
+#include <pybind11/stl.h>  // 必须包含！
 
 
 void execute_bytecode(const std::shared_ptr<ZataModule>& module)
