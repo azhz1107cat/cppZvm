@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <utility>
-#include <any>
 #include <memory>
 
 
@@ -20,7 +19,7 @@ struct ZataModule final : ZataObject {
     std::string module_name;
     int local_count = 0;
     std::vector<int> bytecode;
-    std::vector<std::any> consts;
+    std::vector<ZataElem> consts;
     std::vector<std::pair<int, int>> line_number_map;
 };
 
@@ -48,35 +47,50 @@ struct ZataClass final : ZataObject {
 // 实例对象
 struct ZataInstance final : ZataObject {
     std::shared_ptr<ZataClass> ref_class = nullptr;
-    std::vector<std::shared_ptr<ZataObject>> fields;
+    std::vector<ZataElem> fields;
 };
 
 // 字符串对象
 struct ZataString final : ZataObject {
-    std::string value;
+    std::string val;
 };
 
 // 整数对象
 struct ZataInt final : ZataObject {
-    int value;
+    int val;
 };
 
 // 长整数
-struct ZataLongInt final : ZataObject {
-    long long value;
+struct ZataInt64 final : ZataObject {
+    long long val;
+};
+
+// 无限整数
+struct ZataInfInt final : ZataObject {
+    std::string val;
 };
 
 // 浮点数对象
 struct ZataFloat final : ZataObject {
-    double value;
+    float val;
 };
 
-struct ZataBool final : ZataObject {
+// 长浮点数对象
+struct ZataFloat64 final : ZataObject {
+    double val;
+};
+
+// 安全小数
+struct ZataDec final : ZataObject {
+    std::string val;
+};
+
+struct ZataState final : ZataObject {
     // 1 => True
     // 2 => False
     // 3 => None
     // 4 => Nofound
-    int value;
+    int val;
 };
 
 // 调用帧

@@ -15,7 +15,7 @@
 
 // 虚拟机
 class ZataVirtualMachine {
-    std::stack<ZataElem>   op_stack;
+    std::stack<ZataElem>    op_stack;
     std::stack<CallFrame>   call_stack;
 
     std::vector<ZataElem>  locals;
@@ -41,9 +41,7 @@ public:
         this->code = main_code;
         this->running = true;
         while(this->running) {
-            const std::vector<int>& current_code = !this->current_function.empty()
-                                                   ? this->current_function.top()->bytecode
-                                                   : this->code;
+            const std::vector<int>& current_code{};
 
             if (this->pc >= current_code.size()){
                 this->running = false;
@@ -116,9 +114,9 @@ public:
                 this->op_stack.pop();
 
                 int condition = 2;
-                std::shared_ptr<ZataBool> bool_obj_ptr = dynamic_pointer_cast<ZataBool>(cond);
+                std::shared_ptr<ZataState> bool_obj_ptr = dynamic_pointer_cast<ZataState>(cond);
                 if(bool_obj_ptr) {
-                    condition = bool_obj_ptr->value;
+                    condition = bool_obj_ptr->val;
                 }else {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
@@ -140,9 +138,9 @@ public:
                 this->op_stack.pop();
 
                 int condition = 2;
-                std::shared_ptr<ZataBool> bool_obj_ptr = dynamic_pointer_cast<ZataBool>(cond);
+                std::shared_ptr<ZataState> bool_obj_ptr = dynamic_pointer_cast<ZataState>(cond);
                 if(bool_obj_ptr) {
-                    condition = bool_obj_ptr->value;
+                    condition = bool_obj_ptr->val;
                 }else {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
@@ -407,7 +405,7 @@ public:
                     });
                 }
 
-                int size = size_obj->value;
+                int size = size_obj->val;
                 if (size <= 0) {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
@@ -423,8 +421,8 @@ public:
                     .size = static_cast<uint64_t>(size),
                     .data = nullptr
                 };
-                auto zata_long_int = std::make_shared<ZataLongInt>();
-                zata_long_int->value = addr;
+                auto zata_long_int = std::make_shared<ZataInt64>();
+                zata_long_int->val = addr;
 
                 op_stack.emplace(zata_long_int);
 
@@ -434,15 +432,15 @@ public:
             case Opcode::FREE: {
                 ZataElem addr_elem = op_stack.top();
                 op_stack.pop();
-                auto addr_obj = std::dynamic_pointer_cast<ZataLongInt>(addr_elem);
+                auto addr_obj = std::dynamic_pointer_cast<ZataInt64>(addr_elem);
                 if (!addr_obj) {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
-                        .message = "FREE: address must be a ZataLongInt (long long)",
+                        .message = "FREE: address must be a ZataInt64 (long long)",
                         .error_code = 0
                     });
                 }
-                auto addr = static_cast<uint64_t>(addr_obj->value);
+                auto addr = static_cast<uint64_t>(addr_obj->val);
 
                 if (!memory.contains(addr)) {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
@@ -459,15 +457,15 @@ public:
             case Opcode::LOAD_MEM: {
                 ZataElem addr_elem = op_stack.top();
                 op_stack.pop();
-                auto addr_obj = std::dynamic_pointer_cast<ZataLongInt>(addr_elem);
+                auto addr_obj = std::dynamic_pointer_cast<ZataInt64>(addr_elem);
                 if (!addr_obj) {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
-                        .message = "LOAD_MEM: address must be a ZataLongInt (long long)",
+                        .message = "LOAD_MEM: address must be a ZataInt64 (long long)",
                         .error_code = 0
                     });
                 }
-                auto addr = static_cast<uint64_t>(addr_obj->value);
+                auto addr = static_cast<uint64_t>(addr_obj->val);
 
                 auto it = memory.find(addr);
                 if (it == memory.end()) {
@@ -491,15 +489,15 @@ public:
                 ZataElem addr_elem = op_stack.top();
                 op_stack.pop();
 
-                auto addr_obj = std::dynamic_pointer_cast<ZataLongInt>(addr_elem);
+                auto addr_obj = std::dynamic_pointer_cast<ZataInt64>(addr_elem);
                 if (!addr_obj) {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
-                        .message = "STORE_MEM: address must be a ZataLongInt (long long)",
+                        .message = "STORE_MEM: address must be a ZataInt64 (long long)",
                         .error_code = 0
                     });
                 }
-                auto addr = static_cast<uint64_t>(addr_obj->value);
+                auto addr = static_cast<uint64_t>(addr_obj->val);
 
                 // 检查地址是否已分配
                 auto it = memory.find(addr);
