@@ -42,7 +42,7 @@ public:
         this->code = main_code;
         this->running = true;
         while(this->running) {
-            const std::vector<int>& current_code{};
+            const std::vector<int>& current_code = main_code;
 
             if (this->pc >= current_code.size()){
                 this->running = false;
@@ -201,7 +201,9 @@ public:
                     fns_locals[i] = args[i];
                 }
 
-                if (fn_ptr->function_name == "print"){zata_print(args);}
+                if (fn_ptr->function_name == "print") zata_print(args);break;
+                if (fn_ptr->function_name == "input") zata_input(args);break;
+                if (fn_ptr->function_name == "now")   zata_now(args);break;
 
                 CallFrame frame{
                     .pc = this->pc,

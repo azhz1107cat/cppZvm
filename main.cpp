@@ -13,7 +13,7 @@ void execute_bytecode(const std::shared_ptr<ZataModule>& module)
     Utils::enable_ansi_escape();
 
     ZataVirtualMachine vm(module->consts);
-    const auto current_stack = vm.run(module->bytecode);
+    vm.run(module->bytecode);
 }
 
 namespace py = pybind11;
