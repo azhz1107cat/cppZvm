@@ -4,7 +4,7 @@
 #include <iostream>
 #include <windows.h>
 
-extern "C" inline void zata_print(const std::vector<ZataElem>& arguments) {
+inline void zata_print(const std::vector<ZataElem>& arguments) {
     const auto target_text = std::dynamic_pointer_cast<ZataString>(arguments[0]);
     if (!target_text) {
         zata_vm_error_thrower({},ZataError{
@@ -13,10 +13,10 @@ extern "C" inline void zata_print(const std::vector<ZataElem>& arguments) {
                         .error_code = 0
                     });
     }
-    std::cout << target_text << std::endl;
+    std::cout << target_text->val << std::endl;
 }
 
-extern "C" inline ZataString zata_input(const std::vector<ZataElem>& arguments) {
+inline ZataString zata_input(const std::vector<ZataElem>& arguments) {
     std::cout << arguments[0];
     std::string input;
     std::getline(std::cin, input);
@@ -25,7 +25,7 @@ extern "C" inline ZataString zata_input(const std::vector<ZataElem>& arguments) 
     return result;
 }
 
-extern "C" inline ZataFloat zata_now(const std::vector<ZataElem>& arguments) {
+inline ZataFloat zata_now(const std::vector<ZataElem>& arguments) {
     #ifdef _WIN32
     LARGE_INTEGER freq;
     LARGE_INTEGER counter;

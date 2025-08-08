@@ -40,6 +40,7 @@ namespace Opcode {
     constexpr int DUP = 0x26;         // 复制栈顶值
     constexpr int PUSH = 0x27;        // 将整数压入栈顶
     constexpr int POP = 0x28;         // 弹出栈顶值并丢弃
+    constexpr int LOAD_SLL = 0x29;    // 加载c/c++静态链接库
 
     // 控制流
     constexpr int JMP = 0x30;         // 无条件跳转
