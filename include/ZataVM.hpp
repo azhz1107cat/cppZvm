@@ -201,9 +201,9 @@ public:
                     fns_locals[i] = args[i];
                 }
 
-                if (fn_ptr->function_name == "print") zata_print(args);break;
-                if (fn_ptr->function_name == "input") zata_input(args);break;
-                if (fn_ptr->function_name == "now")   zata_now(args);break;
+                if (fn_ptr->function_name == "print"){zata_print(args);break;}
+                if (fn_ptr->function_name == "input"){zata_input(args);break;}
+                if (fn_ptr->function_name == "now"){zata_now(args);break;}
 
                 CallFrame frame{
                     .pc = this->pc,
