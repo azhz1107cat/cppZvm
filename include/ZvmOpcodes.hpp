@@ -38,7 +38,6 @@ namespace Opcode {
     constexpr int STORE_GLOBAL = 0x24;// 存储全局变量
     constexpr int SWAP = 0x25;        // 交换栈顶值
     constexpr int DUP = 0x26;         // 复制栈顶值
-    constexpr int PUSH = 0x27;        // 将整数压入栈顶
     constexpr int POP = 0x28;         // 弹出栈顶值并丢弃
     constexpr int LOAD_SLL = 0x29;    // 加载c/c++静态链接库
 
@@ -48,9 +47,7 @@ namespace Opcode {
     constexpr int JMP_IF_FALSE = 0x32;// 如果为假跳转
     constexpr int CALL = 0x33;        // 调用函数
     constexpr int RET = 0x34;         // 从函数返回
-    constexpr int BRK = 0x35;         // 中断执行
-    constexpr int CONT = 0x36;        // 继续执行
-    constexpr int NOP = 0x37;         // 占位符
+    constexpr int NOP = 0x35;         // 占位符
 
     // 对象操作
     constexpr int NEW_OBJ = 0x40;     // 创建新对象

@@ -35,7 +35,8 @@ target_include_directories(pybind11 INTERFACE ${PYBIND11_DIR})
 add_library(cppZvm MODULE main.cpp
         include/ZataBuiltins.hpp
         include/Errors.hpp
-        include/utils.hpp)
+        include/utils.hpp
+        include/SLL_loader.hpp)
 target_include_directories(cppZvm PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${PYTHON312_INCLUDE_DIR}
