@@ -8,12 +8,19 @@
 #include <pybind11/stl.h>  // 必须包含！
 
 
-void execute_bytecode(const std::shared_ptr<ZataModule>& module)
-{
-    Utils::enable_ansi_escape();
+ std::vector<ZataElem> execute_bytecode(const std::shared_ptr<ZataModule>& module){
+    std::stack<ZataElem> result;
+    try {
+        Utils::enable_ansi_escape();
 
-    ZataVirtualMachine vm(module->consts);
-    vm.run(module->bytecode);
+        ZataVirtualMachine vm(module->consts);
+        result = vm.run(module->bytecode);
+    } catch (const std::exception& e) {
+        std::cout << Fore::RED << "Error from Zata Vm (GCC raised): " << e.what() << Fore::RESET << std::endl;
+        exit(-1);
+    }
+
+    return Utils::stack_to_vector(result);
 }
 
 namespace py = pybind11;

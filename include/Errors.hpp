@@ -36,20 +36,21 @@ namespace Fore {
 
 inline void zata_vm_error_thrower(std::stack<CallFrame> current_call_stack,
                                   const ZataError& error_class){
-    std::cout << "-- [ Trace Back ] --" << std::endl;
+    std::cout << Fore::RED << "-- [ Trace Back ] --" << Fore::RESET << std::endl;
 
     while (!current_call_stack.empty()) {
         CallFrame current_call_frame = current_call_stack.top();
 
-        std::cout << " at function " << current_call_frame.function_name << std::endl;
+        std::cout << Fore::RED << " at function " << current_call_frame.function_name << Fore::RESET << std::endl;
 
         current_call_stack.pop();
     }
 
-    std::cout << "-- [ Infos ] --" << std::endl;
-    std::cout << error_class.name << ":" << error_class.message << "err_code=" <<error_class.error_code<< std::endl;
+    std::cout << Fore::RED << "-- [ Infos ] --" << Fore::RESET << std::endl;
+    std::cout << Fore::RED <<  error_class.name << ":" << error_class.message << " err_code=" << error_class.error_code << Fore::RESET << std::endl;
 
-    std::cout << "-- [ End ] --" << std::endl;
+    std::cout << Fore::RED << "-- [ End ] --" << Fore::RESET  << std::endl;
+    exit(error_class.error_code);
 };
 
 #endif // ZATA_ERRORS_H
