@@ -3,63 +3,80 @@
 
 
 namespace Opcode {
-    // 算术运算
-    // constexpr int CALC = 0x00;
-    // constexpr int ADD = 0x01    // 加法 a+b
-    // constexpr int SUB = 0x02;   // 减法 a-b
-    // constexpr int MUL = 0x03;   // 乘法 a*b
-    // constexpr int DIV = 0x04;   // 除法 a/b
-    // constexpr int MOD = 0x05;   // 取模 a%b
-    // constexpr int NEG = 0x06;   // 取相反数 -a
 
-    // 二进制
-    // constexpr int BIT_AND = 0x70; // 按位与
-    // constexpr int BIT_OR = 0x71;  // 按位或
-    // constexpr int BIT_XOR = 0x72; // 按位异或
-    // constexpr int SHL = 0x73;     // 左移
-    // constexpr int SHR = 0x74;     // 右移
+    constexpr int B_CALC = 0x01;  // 通用二元运算   <pattern>
+    // 0 -> add
+    // 1 -> sub
+    // 2 -> mul
+    // 3 -> div
+    // 4 -> mod
+    // 5 -> eq
+    // 6 -> weq
+    // 7 -> lt
+    // 8 -> gt
+    // 9 -> le
+    // 10 -> ge
+    // 11 -> and
+    // 12 -> or
+    // 13 -> not
+    // 14 -> bit_and
+    // 15 -> bit_or
+    // 16 -> bit_xor
 
-    // 逻辑运算
-    // constexpr int EQ_EQ = 0x10; // 等于 a==b
-    // constexpr int NE = 0x11;    // 不等于 a!=b
-    // constexpr int LT = 0x12;    // 小于 a<b
-    // constexpr int GT = 0x13;    // 大于 a>b
-    // constexpr int LE = 0x14;    // 小于等于 a<=b
-    // constexpr int GE = 0x15;    // 大于等于 a>=b
-    // constexpr int AND = 0x16;   // 逻辑与 a&&b
-    // constexpr int OR = 0x17;    // 逻辑或 a||b
-    // constexpr int NOT = 0x18;   // 逻辑非 !a
+    constexpr int U_CALC = 0x02;  // 通用一元运算   <pattern>
+    // 0 -> neg
+    // 1 -> not
+    // 2 -> bit_not
 
     // 加载/存储指令
-    constexpr int LOAD_CONST = 0x20;  // 从常量池加载常量到栈
-    constexpr int LOAD_VAR = 0x21;    // 从变量加载值到栈
-    constexpr int STORE_VAR = 0x22;   // 从栈存储值到变量
-    constexpr int LOAD_GLOBAL = 0x23; // 加载全局变量
-    constexpr int STORE_GLOBAL = 0x24;// 存储全局变量
-    constexpr int SWAP = 0x25;        // 交换栈顶值
-    constexpr int DUP = 0x26;         // 复制栈顶值
-    constexpr int POP = 0x28;         // 弹出栈顶值并丢弃
-    constexpr int LOAD_SLL = 0x29;    // 加载c/c++静态链接库
+    constexpr int LOAD_CONST = 0x20;    // 从常量池加载常量到栈 <index in consts>
+    constexpr int LOAD_LOCAL = 0x21;    // 从变量加载值到栈    <index in names>
+    constexpr int STORE_LOCAL = 0x22;   // 从栈存储值到变量    <index in names>
+    constexpr int LOAD_GLOBAL = 0x23;   // 加载全局变量       <index in names>
+    constexpr int STORE_GLOBAL = 0x24;  // 存储全局变量       <index in names>
+    constexpr int LOAD_CLOSURE = 0x25;  // 加载闭包变量       <index in names>
+    constexpr int SWAP = 0x26;          // 交换栈顶值
+    constexpr int DUP = 0x27;           // 复制栈顶值
+    constexpr int POP = 0x28;           // 弹出栈顶值并丢弃
+    constexpr int LOAD_SLL = 0x29;      // 加载c/c++静态链接库 <index in consts>
 
     // 控制流
-    constexpr int JMP = 0x30;         // 无条件跳转
-    constexpr int JMP_IF_TRUE = 0x31; // 如果为真跳转
-    constexpr int JMP_IF_FALSE = 0x32;// 如果为假跳转
-    constexpr int CALL = 0x33;        // 调用函数
+    constexpr int JMP = 0x30;         // 无条件跳转    <offset>
+    constexpr int JMP_IF_TRUE = 0x31; // 如果为真跳转  <offset>
+    constexpr int JMP_IF_FALSE = 0x32;// 如果为假跳转  <offset>
+    constexpr int CALL = 0x33;        // 调用函数     <arg_count>
     constexpr int RET = 0x34;         // 从函数返回
     constexpr int NOP = 0x35;         // 占位符
 
     // 对象操作
-    constexpr int NEW_OBJ = 0x40;     // 创建新对象
-    constexpr int GET_FIELD = 0x41;   // 获取对象字段
-    constexpr int SET_FIELD = 0x42;   // 设置对象字段
-    constexpr int CALL_METHOD = 0x43; // 调用对象方法
+    constexpr int MAKE_INSTANCE = 0x40;     // 创建新对象  <index in consts>
+    constexpr int GET_ATTR = 0x41;   // 获取对象属性  <index in names>
+    constexpr int SET_ATTR = 0x42;   // 设置对象属性  <index in names>
+    constexpr int GET_ITER  = 0x43;  // 获取迭代器
+    constexpr int NEXT_ITER  = 0x44; // 迭代器自增
 
     // 内存操作
     constexpr int ALLOC = 0x50;       // 分配内存
     constexpr int FREE = 0x51;        // 释放内存
     constexpr int LOAD_MEM = 0x52;    // 从内存加载
     constexpr int STORE_MEM = 0x53;   // 存储到内存
+
+    // 异常处理
+    constexpr int SETUP_FINALLY = 0x54;     // 设置finally块 <offset>
+    constexpr int TRY_CATCH_START = 0x55;   // 进入try-catch块 <offset>
+    constexpr int TRY_FINALLY_START = 0x56;     // 进入try-finally块 <offset>
+    constexpr int SETUP_CATCH = 0x56;       // 进入catch块 <index in consts>
+    constexpr int END_FINALLY = 0x57;       // 结束finally块
+    constexpr int BS_POP = 0x58;            // 弹出块栈顶值并丢弃  BS -> BlockStack
+    constexpr int THROW = 0x59;             // 抛出栈顶异常
+
+    // 专门指令(用于优化)
+    constexpr int LIST_APPEND = 0x60;
+    constexpr int LIST_EXTEND = 0x61;
+    constexpr int DICT_SETITEM = 0x62;
+    constexpr int DICT_UPDATE = 0x63;
+    constexpr int GET_LEN = 0x64;
+    constexpr int IS_INSTANCE = 0x65;
 
     // 特殊指令
     constexpr int HALT = 0xFF;     // 终止执行

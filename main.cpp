@@ -3,8 +3,8 @@
 #include "include/ZataVM.hpp"
 #include <pybind11/pybind11.h>
 
-#include "Errors.hpp"
-#include "utils.hpp"
+#include "include/models/Errors.hpp"
+#include "include/utils/Utils.hpp"
 #include <pybind11/stl.h>  // 必须包含！
 
 

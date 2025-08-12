@@ -8,8 +8,8 @@
 #include <memory>
 #include <unordered_map>
 
-#include "Errors.hpp"
-#include "Objects.hpp"
+#include "models/Errors.hpp"
+#include "models/Objects.hpp"
 #include "ZataBuiltins.hpp"
 
 #include "ZvmOpcodes.hpp"
