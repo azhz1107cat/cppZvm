@@ -3,7 +3,7 @@
 #include <fstream>
 #include <windows.h>
 
-#include "../ZataVM.hpp"
+#include "../models/Objects.hpp"
 
 
 namespace Utils {

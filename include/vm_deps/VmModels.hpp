@@ -1,26 +1,10 @@
-#ifndef VMDEPS_HPP
-#define VMDEPS_HPP
+#ifndef VM_DEPS_HPP
+#define VM_DEPS_HPP
 #include <vector>
 
 #include "../models/Objects.hpp"
+#include "builtins/builtins_functions.hpp"
 
-// 调用帧
-struct CallFrame {
-    int pc = 0;
-    std::vector<ZataObjectPtr> locals;
-    int return_address = 0;
-    std::string function_name;
-    std::vector<ZataObjectPtr> constant_pool;
-    std::vector<int> code;
-};
-
-enum BinaryCalc {
-
-};
-
-enum UnaryCalc {
-
-};
 
 // 上下文, 用于报错
 struct Context{
@@ -30,7 +14,13 @@ struct Context{
 
 // 块
 struct Block {
-    std::string name = "";
+    std::string name;
 };
 
-#endif //VMDEPS_HPP
+inline std::unordered_map<std::string,std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)>> BuiltinsFunction = {
+    {"print", zata_print},
+    {"input", zata_input},
+    {"now", zata_now}
+};
+
+#endif //VM_DEPS_HPP

@@ -17,7 +17,7 @@ std::vector<ZataObjectPtr> execute_bytecode(
         Utils::enable_ansi_escape();
 
         ZataVirtualMachine vm(module,contexts);
-        result = vm.exec_module();
+        result = vm.run();
     } catch (const std::exception& e) {
         std::cout << Fore::RED << "Error from Zata Vm (GCC raised): " << e.what() << Fore::RESET << std::endl;
         exit(-1);
@@ -41,7 +41,6 @@ PYBIND11_MODULE(cppZvm, m) {
     // 字节码对象绑定
     py::class_<ZataCodeObject, ZataObject, std::shared_ptr<ZataCodeObject>>(m, "ZataCodeObject")
         .def(py::init<>())
-        .def_readwrite("names", &ZataCodeObject::names)
         .def_readwrite("consts", &ZataCodeObject::consts)
         .def_readwrite("co_code", &ZataCodeObject::co_code)
         .def_readwrite("line_map", &ZataCodeObject::line_map);
@@ -74,10 +73,10 @@ PYBIND11_MODULE(cppZvm, m) {
         .def_readwrite("ref_class", &ZataInstance::ref_class)  // 关联的类
         .def_readwrite("fields", &ZataInstance::fields);       // 实例字段
 
-    // 内置类型对象绑定（ZataType）
-    py::class_<ZataType, ZataObject, std::shared_ptr<ZataType>>(m, "ZataType")
+    // 内置类型对象绑定（ZataBuiltinsType）
+    py::class_<ZataBuiltinsType, ZataObject, std::shared_ptr<ZataBuiltinsType>>(m, "ZataBuiltinsType")
         .def(py::init<>())
-        .def_readwrite("object_type", &ZataType::object_type)  // 弱引用自身类型
+        .def_readwrite("object_type", &ZataBuiltinsType::object_type)  // 弱引用自身类型
         ;
 
     // 字符串对象绑定（正确）

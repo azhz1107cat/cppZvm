@@ -4,7 +4,7 @@
 #include <stack>
 #include <string>
 
-#include "../vm_deps/VmModels.hpp"
+#include "../vm_deps/CallFrame.hpp"
 
 struct ZataError {
     std::string name = "ZataError";
@@ -41,7 +41,7 @@ inline void zata_vm_error_thrower(std::stack<CallFrame> current_call_stack,
     while (!current_call_stack.empty()) {
         CallFrame current_call_frame = current_call_stack.top();
 
-        std::cout << Fore::RED << " at function " << current_call_frame.function_name << Fore::RESET << std::endl;
+        std::cout << Fore::RED << " at function " << current_call_frame.name << Fore::RESET << std::endl;
 
         current_call_stack.pop();
     }

@@ -6,8 +6,7 @@ namespace Opcode {
 
     constexpr int U_CALC = 0x01;  // 通用一元运算   <pattern>
     // 0 -> neg
-    // 1 -> not
-    // 2 -> bit_not
+    // 1 -> bit_not
 
     constexpr int B_CALC = 0x02;  // 通用二元运算   <pattern>
     // 0 -> add
@@ -21,11 +20,9 @@ namespace Opcode {
     // 8 -> gt
     // 9 -> le
     // 10 -> ge
-    // 11 -> and
-    // 12 -> or
-    // 13 -> bit_and
-    // 14 -> bit_or
-    // 15 -> bit_xor
+    // 11 -> bit_and
+    // 12 -> bit_or
+    // 13 -> bit_xor
 
     // 加载/存储指令
     constexpr int LOAD_CONST = 0x20;    // 从常量池加载常量到栈 <index in consts>

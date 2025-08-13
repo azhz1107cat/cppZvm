@@ -4,7 +4,9 @@
 #include <iostream>
 #include <windows.h>
 
-inline std::shared_ptr<ZataState> zata_print(const std::vector<ZataObjectPtr>& arguments) {
+#include "models/Errors.hpp"
+
+inline ZataObjectPtr zata_print(const std::vector<ZataObjectPtr>& arguments) {
     const auto target_text = std::dynamic_pointer_cast<ZataString>(arguments[0]);
     if (!target_text) {
         zata_vm_error_thrower({},ZataError{
@@ -16,11 +18,11 @@ inline std::shared_ptr<ZataState> zata_print(const std::vector<ZataObjectPtr>& a
     std::cout << target_text->val << std::endl;
 
     auto none = std::make_shared<ZataState>();
-    none->val = 2;
+    none->val = static_cast<ZataState::Value>(2);
     return none;
 }
 
-inline std::shared_ptr<ZataString> zata_input(const std::vector<ZataObjectPtr>& arguments) {
+inline ZataObjectPtr zata_input(const std::vector<ZataObjectPtr>& arguments) {
     std::cout << arguments[0];
     std::string input;
     std::getline(std::cin, input);
@@ -30,7 +32,7 @@ inline std::shared_ptr<ZataString> zata_input(const std::vector<ZataObjectPtr>& 
     return result;
 }
 
-inline ZataFloat zata_now(const std::vector<ZataObjectPtr>& arguments) {
+inline ZataObjectPtr zata_now(const std::vector<ZataObjectPtr>& arguments) {
     #ifdef _WIN32
     LARGE_INTEGER freq;
     LARGE_INTEGER counter;
@@ -38,8 +40,8 @@ inline ZataFloat zata_now(const std::vector<ZataObjectPtr>& arguments) {
     QueryPerformanceCounter(&counter);
     // 转换为秒（计数器值 / 频率）
     auto second = (float)((double)counter.QuadPart / (double)freq.QuadPart);
-    auto result = ZataFloat();
-    result.val = second;
+    auto result = std::make_shared<ZataFloat>();
+    result->val = second;
     return result;
 
     #else

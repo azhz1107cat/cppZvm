@@ -220,7 +220,7 @@ inline ZataObjectPtr list_getitem(const std::vector<ZataObjectPtr>& args) {
 // -------------------------- 类型绑定 --------------------------
 
 // 整数类型绑定
-inline auto int_type = std::make_shared<ZataType>();
+inline auto int_type = std::make_shared<ZataBuiltinsType>();
 
 inline void bind_int_type() {
     int_type->type_add = int_add;
@@ -231,7 +231,7 @@ inline void bind_int_type() {
 }
 
 // 字符串类型绑定
-inline auto str_type = std::make_shared<ZataType>();
+inline auto str_type = std::make_shared<ZataBuiltinsType>();
 
 inline void bind_str_type() {
     str_type->type_add = str_add;
@@ -239,7 +239,7 @@ inline void bind_str_type() {
 }
 
 // 列表类型绑定
-inline auto list_type = std::make_shared<ZataType>();
+inline auto list_type = std::make_shared<ZataBuiltinsType>();
 
 inline void bind_list_type() {
     list_type->type_add = list_add;
@@ -247,7 +247,7 @@ inline void bind_list_type() {
 }
 
 // 长整数类型绑定
-inline auto int64_type = std::make_shared<ZataType>();
+inline auto int64_type = std::make_shared<ZataBuiltinsType>();
 
 inline void bind_int64_type() {
     int64_type->type_add = int64_add;
@@ -256,7 +256,7 @@ inline void bind_int64_type() {
 }
 
 // 浮点数类型绑定
-inline auto float_type = std::make_shared<ZataType>();
+inline auto float_type = std::make_shared<ZataBuiltinsType>();
 
 inline void bind_float_type() {
     float_type->type_add = float_add;
@@ -265,7 +265,7 @@ inline void bind_float_type() {
 }
 
 // 双精度浮点数类型绑定
-inline auto float64_type = std::make_shared<ZataType>();
+inline auto float64_type = std::make_shared<ZataBuiltinsType>();
 
 inline void bind_float64_type() {
     float64_type->type_add = float64_add;
@@ -273,7 +273,7 @@ inline void bind_float64_type() {
 }
 
 // 字典类型绑定
-inline auto dict_type = std::make_shared<ZataType>();
+inline auto dict_type = std::make_shared<ZataBuiltinsType>();
 
 inline void bind_dict_type() {
     dict_type->type_getitem = dict_getitem;
@@ -281,7 +281,7 @@ inline void bind_dict_type() {
 }
 
 // 元组类型绑定
-inline auto tuple_type = std::make_shared<ZataType>();
+inline auto tuple_type = std::make_shared<ZataBuiltinsType>();
 
 inline void bind_tuple_type() {
     tuple_type->type_getitem = tuple_getitem;
