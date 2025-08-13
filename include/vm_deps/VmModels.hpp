@@ -2,7 +2,7 @@
 #define VMDEPS_HPP
 #include <vector>
 
-#include "Objects.hpp"
+#include "../models/Objects.hpp"
 
 // 调用帧
 struct CallFrame {
@@ -14,10 +14,23 @@ struct CallFrame {
     std::vector<int> code;
 };
 
-// 内存帧
-struct Allocation {
-    uint64_t size;
-    ZataObjectPtr data;
+enum BinaryCalc {
+
+};
+
+enum UnaryCalc {
+
+};
+
+// 上下文, 用于报错
+struct Context{
+    std::string file_path;
+    std::string file_content;
+};
+
+// 块
+struct Block {
+    std::string name = "";
 };
 
 #endif //VMDEPS_HPP

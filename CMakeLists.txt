@@ -33,11 +33,13 @@ target_include_directories(pybind11 INTERFACE ${PYBIND11_DIR})
 
 # 生成Python模块（.pyd文件）
 add_library(cppZvm MODULE main.cpp
-        include/ZataBuiltins.hpp
+        include/builtins/builtins_functions.hpp
         include/models/Errors.hpp
         include/utils/Utils.hpp
         include/utils/SLL_loader.hpp
-        include/models/VmDepends.hpp)
+        include/vm_deps/VmModels.hpp
+        include/builtins/builtins_type.hpp
+        include/vm_deps/vm_ctor.hpp)
 target_include_directories(cppZvm PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${PYTHON312_INCLUDE_DIR}

@@ -4,7 +4,7 @@
 #include <stack>
 #include <string>
 
-#include "Objects.hpp"
+#include "../vm_deps/VmModels.hpp"
 
 struct ZataError {
     std::string name = "ZataError";

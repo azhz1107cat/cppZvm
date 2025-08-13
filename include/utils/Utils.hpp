@@ -8,8 +8,8 @@
 
 namespace Utils {
     // 将stack转换为vector
-    inline std::vector<ZataElem> stack_to_vector(const std::stack<ZataElem>& stack) {
-        std::vector<ZataElem> result;
+    inline std::vector<ZataObjectPtr> stack_to_vector(const std::stack<ZataObjectPtr>& stack) {
+        std::vector<ZataObjectPtr> result;
         auto temp_stack = stack;
 
         while (!temp_stack.empty()) {
@@ -58,6 +58,7 @@ namespace Utils {
         SetConsoleMode(hOut, mode);
     #endif
     }
+
 }
 
 #endif //UTILS_HPP

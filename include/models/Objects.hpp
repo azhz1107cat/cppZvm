@@ -7,7 +7,12 @@
 #include <vector>
 #include <utility>
 #include <memory>
+#include "utils/Utils.hpp"
 
+inline size_t get_uuid() {
+    static size_t uuid_counter = 0;
+    return uuid_counter++;
+}
 
 struct ZataType;
 
@@ -15,7 +20,7 @@ struct ZataType;
 struct ZataObject {
     std::shared_ptr<ZataType> object_type;
     size_t object_id;
-    ZataObject() : object_type(nullptr), object_id(0) {}
+    ZataObject() : object_type(nullptr), object_id(get_uuid()) {}
     virtual ~ZataObject() = default;
 };
 
@@ -60,19 +65,35 @@ struct ZataInstance final : ZataObject {
 
 // 内置类型对象
 struct ZataType final : ZataObject {
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_new;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_init;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_add;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_sub;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_mul;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_div;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_mod;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_str;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_getattr;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_setattr;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_delattr;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_call;
-    std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)> type_del;
+    using ZataCppFnPtr = std::function<ZataObjectPtr(const std::vector<ZataObjectPtr>&)>;
+    std::weak_ptr<ZataType> object_type;
+    ZataCppFnPtr type_new;
+    ZataCppFnPtr type_init;
+
+    ZataCppFnPtr type_add;
+    ZataCppFnPtr type_sub;
+    ZataCppFnPtr type_mul;
+    ZataCppFnPtr type_div;
+    ZataCppFnPtr type_mod;
+    ZataCppFnPtr type_neg;
+    ZataCppFnPtr type_eq;
+    ZataCppFnPtr type_weq;
+    ZataCppFnPtr type_gt;
+    ZataCppFnPtr type_lt;
+    ZataCppFnPtr type_ge;
+    ZataCppFnPtr type_le;
+    ZataCppFnPtr type_bit_and;
+    ZataCppFnPtr type_bit_not;
+    ZataCppFnPtr type_bit_or;
+    ZataCppFnPtr type_bit_xor;
+
+    ZataCppFnPtr type_nil;
+    ZataCppFnPtr type_str;
+    ZataCppFnPtr type_getitem;
+    ZataCppFnPtr type_setitem;
+    ZataCppFnPtr type_delitem;
+    ZataCppFnPtr type_call;
+    ZataCppFnPtr type_del;
 };
 
 // 字符串对象
@@ -137,16 +158,16 @@ struct ZataTuple final : ZataObject {
 
 // 记录
 struct ZataRecord final : ZataObject {
-    std::unordered_map<std::string, ZataObjectPtr> fields;
+    std::unordered_map<std::string, ZataObjectPtr> attrs;
 };
 
 // 状态
 struct ZataState final : ZataObject {
+    // 0 => False
     // 1 => True
-    // 2 => False
-    // 3 => None
-    // 4 => Nofound
-    int val;
+    // 2 => None
+    // 3 => Nofound
+    short val;
 };
 
 #endif // ZATA_OBJECTS_H

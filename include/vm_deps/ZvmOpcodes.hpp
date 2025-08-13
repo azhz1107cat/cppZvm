@@ -4,7 +4,12 @@
 
 namespace Opcode {
 
-    constexpr int B_CALC = 0x01;  // 通用二元运算   <pattern>
+    constexpr int U_CALC = 0x01;  // 通用一元运算   <pattern>
+    // 0 -> neg
+    // 1 -> not
+    // 2 -> bit_not
+
+    constexpr int B_CALC = 0x02;  // 通用二元运算   <pattern>
     // 0 -> add
     // 1 -> sub
     // 2 -> mul
@@ -18,15 +23,9 @@ namespace Opcode {
     // 10 -> ge
     // 11 -> and
     // 12 -> or
-    // 13 -> not
-    // 14 -> bit_and
-    // 15 -> bit_or
-    // 16 -> bit_xor
-
-    constexpr int U_CALC = 0x02;  // 通用一元运算   <pattern>
-    // 0 -> neg
-    // 1 -> not
-    // 2 -> bit_not
+    // 13 -> bit_and
+    // 14 -> bit_or
+    // 15 -> bit_xor
 
     // 加载/存储指令
     constexpr int LOAD_CONST = 0x20;    // 从常量池加载常量到栈 <index in consts>
@@ -55,16 +54,13 @@ namespace Opcode {
     constexpr int GET_ITER  = 0x43;  // 获取迭代器
     constexpr int NEXT_ITER  = 0x44; // 迭代器自增
 
-    // 内存操作
-    constexpr int ALLOC = 0x50;       // 分配内存
-    constexpr int FREE = 0x51;        // 释放内存
-    constexpr int LOAD_MEM = 0x52;    // 从内存加载
-    constexpr int STORE_MEM = 0x53;   // 存储到内存
+    // 闭包操作
+    constexpr int LOAD_FREE_VAR = 0x50;   // 加载自由变量
 
     // 异常处理
     constexpr int SETUP_FINALLY = 0x54;     // 设置finally块 <offset>
     constexpr int TRY_CATCH_START = 0x55;   // 进入try-catch块 <offset>
-    constexpr int TRY_FINALLY_START = 0x56;     // 进入try-finally块 <offset>
+    constexpr int TRY_FINALLY_START = 0x56; // 进入try-finally块 <offset>
     constexpr int SETUP_CATCH = 0x56;       // 进入catch块 <index in consts>
     constexpr int END_FINALLY = 0x57;       // 结束finally块
     constexpr int BS_POP = 0x58;            // 弹出块栈顶值并丢弃  BS -> BlockStack
