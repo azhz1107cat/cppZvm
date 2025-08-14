@@ -4,18 +4,48 @@
 #include <iostream>
 #include <windows.h>
 
+#include "builtins_type.hpp"
 #include "models/Errors.hpp"
 
 inline ZataObjectPtr zata_print(const std::vector<ZataObjectPtr>& arguments) {
-    const auto target_text = std::dynamic_pointer_cast<ZataString>(arguments[0]);
-    if (!target_text) {
-        zata_vm_error_thrower({},ZataError{
-                        .name = "ZataRunTimeError",
-                        .message = "Can't not print a object without __str__ method",
-                        .error_code = 0
-                    });
+    auto target = std::dynamic_pointer_cast<ZataBuiltinsClass>(arguments[0]);
+    if (!target) {
+        zata_vm_error_thrower({}, ZataError{
+            .name = "ZataTypeError",
+            .message = "print() argument must be a built-in object",
+            .error_code = 0
+        });
     }
-    std::cout << target_text->val << std::endl;
+
+    // 检查是否有type_str方法
+    if (!target->object_type || !target->object_type->type_str) {
+        zata_vm_error_thrower({}, ZataError{
+            .name = "ZataRunTimeError",
+            .message = "Can't print object without __str__ method",
+            .error_code = 0
+        });
+    }
+
+    // 调用type_str获取字符串表示
+    auto str_obj = target->object_type->type_str({target});
+    if (!str_obj) {
+        zata_vm_error_thrower({}, ZataError{
+            .name = "ZataRunTimeError",
+            .message = "__str__ method returned null",
+            .error_code = 0
+        });
+    }
+
+    // 打印
+    auto str_val = std::dynamic_pointer_cast<ZataString>(str_obj);
+    if (!str_val) {
+        zata_vm_error_thrower({}, ZataError{
+            .name = "ZataTypeError",
+            .message = "__str__ method must return a string",
+            .error_code = 0
+        });
+    }
+    std::cout << str_val->val << std::endl;
 
     auto none = std::make_shared<ZataState>();
     none->val = 2;
@@ -28,8 +58,7 @@ inline ZataObjectPtr zata_input(const std::vector<ZataObjectPtr>& arguments) {
     std::string input;
     std::getline(std::cin, input);
 
-    auto result = std::make_shared<ZataString>();
-    result->val = input;
+    auto result = create_str(input);
     return result;
 }
 
@@ -41,8 +70,7 @@ inline ZataObjectPtr zata_now(const std::vector<ZataObjectPtr>& arguments) {
     QueryPerformanceCounter(&counter);
     // 转换为秒（计数器值 / 频率）
     auto second = (float)((double)counter.QuadPart / (double)freq.QuadPart);
-    auto result = std::make_shared<ZataFloat>();
-    result->val = second;
+    auto result = create_float(second);
     return result;
 
     #else

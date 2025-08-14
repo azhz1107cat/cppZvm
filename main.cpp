@@ -7,6 +7,8 @@
 #include "include/utils/Utils.hpp"
 #include <pybind11/stl.h>  // 必须包含！
 
+#include "builtins/builtins_type.hpp"
+
 namespace py = pybind11;
 
 
@@ -26,6 +28,8 @@ PYBIND11_MODULE(cppZvm, m) {
         -> std::vector<ZataObjectPtr> {
             try {
                 Utils::enable_ansi_escape();
+                init_type_system();
+
                 ZataVirtualMachine vm(module, contexts);
                 auto result_stack = vm.run();
                 return Utils::stack_to_vector(result_stack);
@@ -148,4 +152,40 @@ PYBIND11_MODULE(cppZvm, m) {
     py::class_<ZataState, ZataObject, std::shared_ptr<ZataState>>(m, "ZataState")
         .def(py::init<>())
         .def_readwrite("val", &ZataState::val);
+
+    // 绑定整数创建函数
+    m.def("create_int", &create_int,
+          "创建整数对象",
+          py::arg("val"));
+
+    // 绑定字符串创建函数
+    m.def("create_str", &create_str,
+          "创建字符串对象",
+          py::arg("val"));
+
+    // 绑定列表创建函数
+    m.def("create_list", &create_list,
+          "创建空列表对象");
+
+    // 绑定长整数创建函数
+    m.def("create_int64", &create_int64,
+          "创建长整数对象",
+          py::arg("val"));
+
+    // 绑定浮点数创建函数
+    m.def("create_float", &create_float,
+          "创建浮点数对象",
+          py::arg("val"));
+
+    // 绑定双精度浮点数创建函数
+    m.def("create_float64", &create_float64,
+          "创建双精度浮点数对象",
+          py::arg("val"));
+
+    // 绑定字典创建函数
+    m.def("create_dict", &create_dict,
+          "创建空字典对象");
+
+    // 绑定元组创建函数
+    m.def("create_tuple",&create_tuple,"创建空元组对象");
 }

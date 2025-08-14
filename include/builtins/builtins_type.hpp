@@ -1,9 +1,186 @@
 #ifndef BUILTINS_TYPE_HPP
 #define BUILTINS_TYPE_HPP
+#include <iostream>
 #include <memory>
 #include <vector>
+#include <string>  // 补充字符串处理头文件
 
 #include "models/Objects.hpp"
+
+// 提前声明魔术方法（避免未定义错误）
+inline ZataObjectPtr int_add(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr int_sub(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr int_mul(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr int_div(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr int_eq(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr str_add(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr str_eq(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr int64_add(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr int64_sub(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr int64_eq(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr float_add(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr float_sub(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr float_eq(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr float64_add(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr dict_getitem(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr dict_setitem(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr tuple_getitem(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr list_add(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr list_getitem(const std::vector<ZataObjectPtr>& args);
+
+// 提前声明type_str方法
+inline ZataObjectPtr int_str(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr str_str(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr int64_str(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr float_str(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr float64_str(const std::vector<ZataObjectPtr>& args);
+
+
+// -------------------------- 类型绑定 --------------------------
+
+// 整数类型绑定
+inline auto int_type = std::make_shared<ZataBuiltinsType>();
+inline void bind_int_type() {
+    int_type->type_add = int_add;
+    int_type->type_sub = int_sub;
+    int_type->type_mul = int_mul;
+    int_type->type_div = int_div;
+    int_type->type_eq = int_eq;
+    int_type->type_str = int_str;  // 绑定type_str
+}
+
+// 字符串类型绑定
+inline auto str_type = std::make_shared<ZataBuiltinsType>();
+inline void bind_str_type() {
+    str_type->type_add = str_add;
+    str_type->type_eq = str_eq;
+    str_type->type_str = str_str;  // 绑定type_str
+}
+
+// 列表类型绑定
+inline auto list_type = std::make_shared<ZataBuiltinsType>();
+inline void bind_list_type() {
+    list_type->type_add = list_add;
+    list_type->type_getitem = list_getitem;
+    // 若实现了list_str，需在此绑定：list_type->type_str = list_str;
+}
+
+// 长整数类型绑定
+inline auto int64_type = std::make_shared<ZataBuiltinsType>();
+inline void bind_int64_type() {
+    int64_type->type_add = int64_add;
+    int64_type->type_sub = int64_sub;
+    int64_type->type_eq = int64_eq;
+    int64_type->type_str = int64_str;  // 绑定type_str
+}
+
+// 浮点数类型绑定
+inline auto float_type = std::make_shared<ZataBuiltinsType>();
+inline void bind_float_type() {
+    float_type->type_add = float_add;
+    float_type->type_sub = float_sub;
+    float_type->type_eq = float_eq;
+    float_type->type_str = float_str;  // 绑定type_str
+}
+
+// 双精度浮点数类型绑定
+inline auto float64_type = std::make_shared<ZataBuiltinsType>();
+inline void bind_float64_type() {
+    float64_type->type_add = float64_add;
+    float64_type->type_str = float64_str;  // 绑定type_str
+}
+
+// 字典类型绑定
+inline auto dict_type = std::make_shared<ZataBuiltinsType>();
+inline void bind_dict_type() {
+    dict_type->type_getitem = dict_getitem;
+    dict_type->type_setitem = dict_setitem;
+    // 若实现了dict_str，需在此绑定：dict_type->type_str = dict_str;
+}
+
+// 元组类型绑定
+inline auto tuple_type = std::make_shared<ZataBuiltinsType>();
+inline void bind_tuple_type() {
+    tuple_type->type_getitem = tuple_getitem;
+    // 若实现了tuple_str，需在此绑定：tuple_type->type_str = tuple_str;
+}
+
+// 扩展初始化函数（包含所有类型）
+inline void init_type_system() {
+    bind_int_type();       // 整数
+    bind_int64_type();     // 长整数
+    bind_float_type();     // 浮点数
+    bind_float64_type();   // 双精度浮点数
+    bind_str_type();       // 字符串
+    bind_list_type();      // 列表
+    bind_dict_type();      // 字典
+    bind_tuple_type();     // 元组
+}
+
+// -------------------------- 对象创建函数 --------------------------
+
+// 创建整数对象
+inline std::shared_ptr<ZataInt> create_int(int val) {
+    auto obj = std::make_shared<ZataInt>();
+    obj->val = val;
+    obj->object_type = int_type;
+    return obj;
+}
+
+// 创建字符串对象
+inline std::shared_ptr<ZataString> create_str(const std::string& val) {
+    auto obj = std::make_shared<ZataString>();
+    obj->val = val;
+    obj->object_type = str_type;
+    return obj;
+}
+
+// 创建列表对象
+inline std::shared_ptr<ZataList> create_list() {
+    auto obj = std::make_shared<ZataList>();
+    obj->size = 0;
+    obj->object_type = list_type;
+    return obj;
+}
+
+// 创建长整数对象
+inline std::shared_ptr<ZataInt64> create_int64(long long val) {
+    auto obj = std::make_shared<ZataInt64>();
+    obj->val = val;
+    obj->object_type = int64_type;
+    return obj;
+}
+
+// 创建浮点数对象
+inline std::shared_ptr<ZataFloat> create_float(float val) {
+    auto obj = std::make_shared<ZataFloat>();
+    obj->val = val;
+    obj->object_type = float_type;
+    return obj;
+}
+
+// 创建双精度浮点数对象
+inline std::shared_ptr<ZataFloat64> create_float64(double val) {
+    auto obj = std::make_shared<ZataFloat64>();
+    obj->val = val;
+    obj->object_type = float64_type;
+    return obj;
+}
+
+// 创建字典对象
+inline std::shared_ptr<ZataDict> create_dict() {
+    auto obj = std::make_shared<ZataDict>();
+    obj->object_type = dict_type;
+    return obj;
+}
+
+// 创建元组对象（从向量初始化）
+inline std::shared_ptr<ZataTuple> create_tuple(const std::vector<ZataObjectPtr>& items) {
+    auto obj = std::make_shared<ZataTuple>();
+    obj->items = items;
+    obj->object_type = tuple_type;
+    return obj;
+}
 
 // -------------------------- 魔术方法实现 --------------------------
 
@@ -11,12 +188,11 @@
 inline ZataObjectPtr int_add(const std::vector<ZataObjectPtr>& args) {
     auto self = std::dynamic_pointer_cast<ZataInt>(args[0]);
     auto other = std::dynamic_pointer_cast<ZataInt>(args[1]);
-
-    // 类型转换失败返回nullptr
     if (!self || !other) return nullptr;
 
     auto result = std::make_shared<ZataInt>();
     result->val = self->val + other->val;
+    result->object_type = int_type;  // 补充结果的类型绑定
     return result;
 }
 
@@ -28,6 +204,7 @@ inline ZataObjectPtr int_sub(const std::vector<ZataObjectPtr>& args) {
 
     auto result = std::make_shared<ZataInt>();
     result->val = self->val - other->val;
+    result->object_type = int_type;  // 补充结果的类型绑定
     return result;
 }
 
@@ -39,6 +216,7 @@ inline ZataObjectPtr int_mul(const std::vector<ZataObjectPtr>& args) {
 
     auto result = std::make_shared<ZataInt>();
     result->val = self->val * other->val;
+    result->object_type = int_type;  // 补充结果的类型绑定
     return result;
 }
 
@@ -50,6 +228,7 @@ inline ZataObjectPtr int_div(const std::vector<ZataObjectPtr>& args) {
 
     auto result = std::make_shared<ZataInt>();
     result->val = self->val / other->val;
+    result->object_type = int_type;  // 补充结果的类型绑定
     return result;
 }
 
@@ -61,6 +240,7 @@ inline ZataObjectPtr int_eq(const std::vector<ZataObjectPtr>& args) {
 
     auto result = std::make_shared<ZataState>();
     result->val = (self->val == other->val) ? 1 : 0;
+    // 假设ZataState有默认object_type绑定，若没有需补充：result->object_type = state_type;
     return result;
 }
 
@@ -72,6 +252,7 @@ inline ZataObjectPtr str_add(const std::vector<ZataObjectPtr>& args) {
 
     auto result = std::make_shared<ZataString>();
     result->val = self->val + other->val;
+    result->object_type = str_type;  // 补充结果的类型绑定
     return result;
 }
 
@@ -94,6 +275,7 @@ inline ZataObjectPtr int64_add(const std::vector<ZataObjectPtr>& args) {
 
     auto result = std::make_shared<ZataInt64>();
     result->val = self->val + other->val;
+    result->object_type = int64_type;  // 补充结果的类型绑定
     return result;
 }
 
@@ -104,6 +286,7 @@ inline ZataObjectPtr int64_sub(const std::vector<ZataObjectPtr>& args) {
 
     auto result = std::make_shared<ZataInt64>();
     result->val = self->val - other->val;
+    result->object_type = int64_type;  // 补充结果的类型绑定
     return result;
 }
 
@@ -125,6 +308,7 @@ inline ZataObjectPtr float_add(const std::vector<ZataObjectPtr>& args) {
 
     auto result = std::make_shared<ZataFloat>();
     result->val = self->val + other->val;
+    result->object_type = float_type;  // 补充结果的类型绑定
     return result;
 }
 
@@ -135,6 +319,7 @@ inline ZataObjectPtr float_sub(const std::vector<ZataObjectPtr>& args) {
 
     auto result = std::make_shared<ZataFloat>();
     result->val = self->val - other->val;
+    result->object_type = float_type;  // 补充结果的类型绑定
     return result;
 }
 
@@ -156,6 +341,7 @@ inline ZataObjectPtr float64_add(const std::vector<ZataObjectPtr>& args) {
 
     auto result = std::make_shared<ZataFloat64>();
     result->val = self->val + other->val;
+    result->object_type = float64_type;  // 补充结果的类型绑定
     return result;
 }
 
@@ -164,7 +350,7 @@ inline ZataObjectPtr dict_getitem(const std::vector<ZataObjectPtr>& args) {
     auto self = std::dynamic_pointer_cast<ZataDict>(args[0]);
     if (!self) return nullptr;
 
-    auto it = self->key_val.find(args[1]);  // args[1]为键
+    auto it = self->key_val.find(args[1]);
     return (it != self->key_val.end()) ? it->second : nullptr;
 }
 
@@ -172,9 +358,9 @@ inline ZataObjectPtr dict_setitem(const std::vector<ZataObjectPtr>& args) {
     auto self = std::dynamic_pointer_cast<ZataDict>(args[0]);
     if (!self) return nullptr;
 
-    self->key_val[args[1]] = args[2];  // args[1]为键，args[2]为值
+    self->key_val[args[1]] = args[2];
     auto result = std::make_shared<ZataState>();
-    result->val = 1;  // 成功
+    result->val = 1;  // 成功状态
     return result;
 }
 
@@ -201,6 +387,7 @@ inline ZataObjectPtr list_add(const std::vector<ZataObjectPtr>& args) {
     result->items = self->items;
     result->items.insert(result->items.end(), other->items.begin(), other->items.end());
     result->size = result->items.size();
+    result->object_type = list_type;  // 补充结果的类型绑定
     return result;
 }
 
@@ -217,143 +404,61 @@ inline ZataObjectPtr list_getitem(const std::vector<ZataObjectPtr>& args) {
     return self->items[idx];
 }
 
-// -------------------------- 类型绑定 --------------------------
+// -------------------------- 字符串转换（type_str）方法 --------------------------
 
-// 整数类型绑定
-inline auto int_type = std::make_shared<ZataBuiltinsType>();
+// 整数转字符串
+inline ZataObjectPtr int_str(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataInt>(args[0]);
+    if (!self) return nullptr;
 
-inline void bind_int_type() {
-    int_type->type_add = int_add;
-    int_type->type_sub = int_sub;
-    int_type->type_mul = int_mul;
-    int_type->type_div = int_div;
-    int_type->type_eq = int_eq;
+    auto result = std::make_shared<ZataString>();
+    result->val = std::to_string(self->val);
+    result->object_type = str_type;
+    return result;
 }
 
-// 字符串类型绑定
-inline auto str_type = std::make_shared<ZataBuiltinsType>();
+// 字符串转字符串（返回自身值）
+inline ZataObjectPtr str_str(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataString>(args[0]);
+    if (!self) return nullptr;
 
-inline void bind_str_type() {
-    str_type->type_add = str_add;
-    str_type->type_eq = str_eq;
+    auto result = std::make_shared<ZataString>();
+    result->val = self->val;
+    result->object_type = str_type;
+    return result;
 }
 
-// 列表类型绑定
-inline auto list_type = std::make_shared<ZataBuiltinsType>();
+// 长整数（ZataInt64）转字符串
+inline ZataObjectPtr int64_str(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataInt64>(args[0]);
+    if (!self) return nullptr;
 
-inline void bind_list_type() {
-    list_type->type_add = list_add;
-    list_type->type_getitem = list_getitem;
+    auto result = std::make_shared<ZataString>();
+    result->val = std::to_string(self->val);
+    result->object_type = str_type;
+    return result;
 }
 
-// 长整数类型绑定
-inline auto int64_type = std::make_shared<ZataBuiltinsType>();
+// 浮点数（ZataFloat）转字符串
+inline ZataObjectPtr float_str(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataFloat>(args[0]);
+    if (!self) return nullptr;
 
-inline void bind_int64_type() {
-    int64_type->type_add = int64_add;
-    int64_type->type_sub = int64_sub;
-    int64_type->type_eq = int64_eq;
+    auto result = std::make_shared<ZataString>();
+    result->val = std::to_string(self->val);
+    result->object_type = str_type;
+    return result;
 }
 
-// 浮点数类型绑定
-inline auto float_type = std::make_shared<ZataBuiltinsType>();
+// 双精度浮点数（ZataFloat64）转字符串
+inline ZataObjectPtr float64_str(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataFloat64>(args[0]);
+    if (!self) return nullptr;
 
-inline void bind_float_type() {
-    float_type->type_add = float_add;
-    float_type->type_sub = float_sub;
-    float_type->type_eq = float_eq;
-}
-
-// 双精度浮点数类型绑定
-inline auto float64_type = std::make_shared<ZataBuiltinsType>();
-
-inline void bind_float64_type() {
-    float64_type->type_add = float64_add;
-    // 可补充其他方法（sub/mul等）
-}
-
-// 字典类型绑定
-inline auto dict_type = std::make_shared<ZataBuiltinsType>();
-
-inline void bind_dict_type() {
-    dict_type->type_getitem = dict_getitem;
-    dict_type->type_setitem = dict_setitem;
-}
-
-// 元组类型绑定
-inline auto tuple_type = std::make_shared<ZataBuiltinsType>();
-
-inline void bind_tuple_type() {
-    tuple_type->type_getitem = tuple_getitem;
-}
-
-// 扩展初始化函数（包含所有类型）
-inline void init_type_system() {
-    bind_int_type();       // 整数
-    bind_int64_type();     // 长整数
-    bind_float_type();     // 浮点数
-    bind_float64_type();   // 双精度浮点数
-    bind_str_type();       // 字符串
-    bind_list_type();      // 列表
-    bind_dict_type();      // 字典
-    bind_tuple_type();     // 元组
-}
-
-// -------------------------- 对象创建函数 --------------------------
-
-// 创建整数对象
-inline std::shared_ptr<ZataInt> create_int(int val) {
-    auto obj = std::make_shared<ZataInt>();
-    obj->val = val;
-    return obj;
-}
-
-// 创建字符串对象
-inline std::shared_ptr<ZataString> create_str(const std::string& val) {
-    auto obj = std::make_shared<ZataString>();
-    obj->val = val;
-    return obj;
-}
-
-// 创建列表对象
-inline std::shared_ptr<ZataList> create_list() {
-    auto obj = std::make_shared<ZataList>();
-    obj->size = 0;
-    return obj;
-}
-
-// 创建长整数对象
-inline std::shared_ptr<ZataInt64> create_int64(long long val) {
-    auto obj = std::make_shared<ZataInt64>();
-    obj->val = val;
-    return obj;
-}
-
-// 创建浮点数对象
-inline std::shared_ptr<ZataFloat> create_float(float val) {
-    auto obj = std::make_shared<ZataFloat>();
-    obj->val = val;
-    return obj;
-}
-
-// 创建双精度浮点数对象
-inline std::shared_ptr<ZataFloat64> create_float64(double val) {
-    auto obj = std::make_shared<ZataFloat64>();
-    obj->val = val;
-    return obj;
-}
-
-// 创建字典对象
-inline std::shared_ptr<ZataDict> create_dict() {
-    auto obj = std::make_shared<ZataDict>();
-    return obj;
-}
-
-// 创建元组对象（从向量初始化）
-inline std::shared_ptr<ZataTuple> create_tuple(const std::vector<ZataObjectPtr>& items) {
-    auto obj = std::make_shared<ZataTuple>();
-    obj->items = items;
-    return obj;
+    auto result = std::make_shared<ZataString>();
+    result->val = std::to_string(self->val);
+    result->object_type = str_type;
+    return result;
 }
 
 #endif //BUILTINS_TYPE_HPP
