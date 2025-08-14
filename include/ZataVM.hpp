@@ -242,7 +242,7 @@ public:
                 int condition = 2;
                 std::shared_ptr<ZataState> bool_obj_ptr = dynamic_pointer_cast<ZataState>(cond);
                 if(bool_obj_ptr) {
-                    condition = static_cast<int>(bool_obj_ptr->val);
+                    condition = bool_obj_ptr->val;
                 }else {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
@@ -266,7 +266,7 @@ public:
                 int condition = 2;
                 std::shared_ptr<ZataState> bool_obj_ptr = dynamic_pointer_cast<ZataState>(cond);
                 if(bool_obj_ptr) {
-                    condition = static_cast<int>(bool_obj_ptr->val);
+                    condition = bool_obj_ptr->val;
                 }else {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
@@ -323,6 +323,7 @@ public:
                     this->op_stack.emplace(it->second(args));
                     break;
                 }
+
 
                 fn_ptr->code->locals = fns_locals;
                 auto function_code_object = fn_ptr->code;

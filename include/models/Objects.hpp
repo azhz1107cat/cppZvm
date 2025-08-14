@@ -178,6 +178,7 @@ struct ZataUserType final : ZataMetaType {
 
 struct ZataBuiltinsClass : ZataObject {
     std::shared_ptr<ZataBuiltinsType> object_type;
+    std::any val;
     ~ZataBuiltinsClass() override = default;
 };
 
@@ -248,14 +249,11 @@ struct ZataRecord final : ZataBuiltinsClass {
 
 // 状态
 struct ZataState final : ZataBuiltinsClass {
-    enum class Value {
-        False = 0,    // 布尔假
-        True = 1,     // 布尔真
-        None = 2,     // 空值
-        NotFound = 3  // 未找到
-    };
-
-    Value val = Value::None;
+    // 布尔假     False = 0
+    // 布尔真     True = 1
+    // 空值      None = 2
+    // 未找到     NotFound = 3
+    int val = 2;
 };
 
 #endif // ZATA_OBJECTS_H

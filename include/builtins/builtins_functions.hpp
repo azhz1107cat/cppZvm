@@ -18,12 +18,13 @@ inline ZataObjectPtr zata_print(const std::vector<ZataObjectPtr>& arguments) {
     std::cout << target_text->val << std::endl;
 
     auto none = std::make_shared<ZataState>();
-    none->val = static_cast<ZataState::Value>(2);
+    none->val = 2;
     return none;
 }
 
 inline ZataObjectPtr zata_input(const std::vector<ZataObjectPtr>& arguments) {
-    std::cout << arguments[0];
+    const auto prompt = std::dynamic_pointer_cast<ZataString>(arguments[0]);
+    std::cout << prompt->val;
     std::string input;
     std::getline(std::cin, input);
 

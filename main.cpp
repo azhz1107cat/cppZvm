@@ -7,31 +7,37 @@
 #include "include/utils/Utils.hpp"
 #include <pybind11/stl.h>  // 必须包含！
 
-
-std::vector<ZataObjectPtr> execute_bytecode(
-    const std::shared_ptr<ZataModule>& module,
-    const std::vector<Context> &contexts
-){
-    std::stack<ZataObjectPtr> result;
-    try {
-        Utils::enable_ansi_escape();
-
-        ZataVirtualMachine vm(module,contexts);
-        result = vm.run();
-    } catch (const std::exception& e) {
-        std::cout << Fore::RED << "Error from Zata Vm (GCC raised): " << e.what() << Fore::RESET << std::endl;
-        exit(-1);
-    }
-
-    return Utils::stack_to_vector(result);
-}
-
 namespace py = pybind11;
 
 
 PYBIND11_MODULE(cppZvm, m) {
     m.doc() = "Zata虚拟机Python绑定";
+    py::class_<Context>(m, "Context")
+            .def_readonly("file_path", &Context::file_path)
+            .def_readonly("file_content", &Context::file_content)
+            .def_readonly("file_path", &Context::file_path)
+            .def_readonly("file_mtime", &Context::file_mtime);
 
+    // 执行字节码函数
+    m.def("execute_zmod",
+        [](const std::shared_ptr<ZataModule>& module,
+            const std::vector<Context>& contexts
+        )
+        -> std::vector<ZataObjectPtr> {
+            try {
+                Utils::enable_ansi_escape();
+                ZataVirtualMachine vm(module, contexts);
+                auto result_stack = vm.run();
+                return Utils::stack_to_vector(result_stack);
+            } catch (const std::exception& e) {
+                throw py::value_error("Error from Zata Vm (GCC raised): " + std::string(e.what()));
+            } catch (...) {
+                throw py::value_error("Unknown Error from Zata Vm (GCC raised)");
+            }
+        },
+        "执行Zata模块并返回结果列表",
+        py::arg("module"), py::arg("contexts")
+    );
     // 基类绑定（不允许直接实例化）
     py::class_<ZataObject, std::shared_ptr<ZataObject>>(m, "ZataObject")
         .def(py::init<>())
@@ -45,56 +51,52 @@ PYBIND11_MODULE(cppZvm, m) {
         .def_readwrite("co_code", &ZataCodeObject::co_code)
         .def_readwrite("line_map", &ZataCodeObject::line_map);
 
-    // 模块对象绑定（修复成员映射错误）
+    // 模块对象绑定
     py::class_<ZataModule, ZataObject, std::shared_ptr<ZataModule>>(m, "ZataModule")
         .def(py::init<>())
-        .def_readwrite("module_name", &ZataModule::object_name)  // 对应 object_name
+        .def_readwrite("module_name", &ZataModule::object_name)
         .def_readwrite("module_path", &ZataModule::module_path)
-        .def_readwrite("globals", &ZataModule::globals)          // 全局变量映射
-        .def_readwrite("code", &ZataModule::code);               // 关联的字节码对象
+        .def_readwrite("globals", &ZataModule::globals)
+        .def_readwrite("code", &ZataModule::code);
 
-    // 函数对象绑定（修复成员错误）
+    // 函数对象绑定
     py::class_<ZataFunction, ZataObject, std::shared_ptr<ZataFunction>>(m, "ZataFunction")
         .def(py::init<>())
         .def_readwrite("function_name", &ZataFunction::object_name)
         .def_readwrite("arg_count", &ZataFunction::arg_count)
-        .def_readwrite("code", &ZataFunction::code);  // 关联的字节码对象
+        .def_readwrite("code", &ZataFunction::code);
 
-    // 类对象绑定（修复成员名称）
+    // 类对象绑定
     py::class_<ZataClass, ZataObject, std::shared_ptr<ZataClass>>(m, "ZataClass")
         .def(py::init<>())
         .def_readwrite("class_name", &ZataClass::object_name)
-        .def_readwrite("parent_class", &ZataClass::parent_class)  // 父类列表
-        .def_readwrite("attrs", &ZataClass::attrs);               // 类属性
+        .def_readwrite("parent_class", &ZataClass::parent_class)
+        .def_readwrite("attrs", &ZataClass::attrs);
 
-    // 实例对象绑定（正确）
+    // 实例对象绑定
     py::class_<ZataInstance, ZataObject, std::shared_ptr<ZataInstance>>(m, "ZataInstance")
         .def(py::init<>())
-        .def_readwrite("ref_class", &ZataInstance::ref_class)  // 关联的类
-        .def_readwrite("fields", &ZataInstance::fields);       // 实例字段
+        .def_readwrite("ref_class", &ZataInstance::ref_class)
+        .def_readwrite("fields", &ZataInstance::fields);
 
-    // 内置类型对象绑定（ZataBuiltinsType）
-    py::class_<ZataBuiltinsType, ZataObject, std::shared_ptr<ZataBuiltinsType>>(m, "ZataBuiltinsType")
-        .def(py::init<>())
-        .def_readwrite("object_type", &ZataBuiltinsType::object_type)  // 弱引用自身类型
-        ;
+    // （已删除ZataBuiltinsType的绑定）
 
-    // 字符串对象绑定（正确）
+    // 字符串对象绑定
     py::class_<ZataString, ZataObject, std::shared_ptr<ZataString>>(m, "ZataString")
         .def(py::init<>())
         .def_readwrite("val", &ZataString::val);
 
-    // 整数对象绑定（正确）
+    // 整数对象绑定
     py::class_<ZataInt, ZataObject, std::shared_ptr<ZataInt>>(m, "ZataInt")
         .def(py::init<>())
         .def_readwrite("val", &ZataInt::val);
 
-    // 长整数绑定（正确）
+    // 长整数绑定
     py::class_<ZataInt64, ZataObject, std::shared_ptr<ZataInt64>>(m, "ZataInt64")
         .def(py::init<>())
         .def_readwrite("val", &ZataInt64::val);
 
-    // 无限整数绑定（修复成员错误：无 val，改为 is_negative 和 digits）
+    // 无限整数绑定
     py::class_<ZataInfInt, ZataObject, std::shared_ptr<ZataInfInt>>(m, "ZataInfInt")
         .def(py::init<>())
         .def_readwrite("is_negative", &ZataInfInt::is_negative)
@@ -102,17 +104,17 @@ PYBIND11_MODULE(cppZvm, m) {
         .def_readonly_static("BASE", &ZataInfInt::BASE)
         .def_readonly_static("BASE_DIGITS", &ZataInfInt::BASE_DIGITS);
 
-    // 浮点数对象绑定（正确）
+    // 浮点数对象绑定
     py::class_<ZataFloat, ZataObject, std::shared_ptr<ZataFloat>>(m, "ZataFloat")
         .def(py::init<>())
         .def_readwrite("val", &ZataFloat::val);
 
-    // 长浮点数对象绑定（正确）
+    // 长浮点数对象绑定
     py::class_<ZataFloat64, ZataObject, std::shared_ptr<ZataFloat64>>(m, "ZataFloat64")
         .def(py::init<>())
         .def_readwrite("val", &ZataFloat64::val);
 
-    // 安全小数绑定（修复成员错误：无 val，改为具体成员）
+    // 安全小数绑定
     py::class_<ZataDec, ZataObject, std::shared_ptr<ZataDec>>(m, "ZataDec")
         .def(py::init<>())
         .def_readwrite("is_negative", &ZataDec::is_negative)
@@ -142,7 +144,7 @@ PYBIND11_MODULE(cppZvm, m) {
         .def(py::init<>())
         .def_readwrite("attrs", &ZataRecord::attrs);
 
-    // 状态对象绑定（正确）
+    // 状态对象绑定
     py::class_<ZataState, ZataObject, std::shared_ptr<ZataState>>(m, "ZataState")
         .def(py::init<>())
         .def_readwrite("val", &ZataState::val);
