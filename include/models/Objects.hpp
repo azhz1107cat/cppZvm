@@ -40,7 +40,7 @@ protected:
 
 // 字节码对象
 struct ZataCodeObject final : ZataObject {
-    std::vector<ZataObjectPtr> locals;
+    std::vector<ZataObjectPtr> locals{};
     std::vector<ZataObjectPtr> consts;
     std::vector<int> co_code; // co -> code_object
     std::vector<std::pair<int, int>> line_map; // line_in_zata_file , line_in_code(max)
@@ -50,7 +50,8 @@ struct ZataCodeObject final : ZataObject {
 struct ZataModule final : ZataObject {
     std::string object_name;
     std::string module_path;
-    std::unordered_map<std::string, ZataObjectPtr> globals;
+    std::vector<std::string> names;
+    std::unordered_map<std::string, std::shared_ptr<ZataObject>> attrs;
     std::shared_ptr<ZataCodeObject> code;
     std::vector<std::string> exports{};
 };
@@ -60,6 +61,8 @@ struct ZataFunction final : ZataObject {
     std::string object_name;
     int arg_count = 0;
     std::shared_ptr<ZataCodeObject> code;
+    std::vector<std::string> free_vars_names{};
+    std::unordered_map<std::string, std::shared_ptr<ZataObject>> free_vars{};
 };
 
 // 类对象
@@ -251,7 +254,7 @@ struct ZataRecord final : ZataBuiltinsClass {
 struct ZataState final : ZataBuiltinsClass {
     // 布尔假     False = 0
     // 布尔真     True = 1
-    // 空值      None = 2
+    // 空值       None = 2
     // 未找到     NotFound = 3
     int val = 2;
 };
