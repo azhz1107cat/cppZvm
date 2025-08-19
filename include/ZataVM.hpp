@@ -17,6 +17,7 @@
 
 // 虚拟机
 class ZataVirtualMachine {
+private:
     std::stack<ZataObjectPtr>    op_stack;
     std::stack<CallFrame>        call_stack;
     std::stack<Block>            block_stack;
@@ -27,6 +28,7 @@ class ZataVirtualMachine {
 
     std::shared_ptr<ZataModule>  module;
     std::vector<Context>         contexts;
+    std::vector<int>             co_code;
     int pc = 0;
     bool running = false;
 
@@ -56,7 +58,7 @@ public:
         this->running = true;
         this->locals = code_object->locals;
         this->constant_pool = code_object->consts;
-        auto co_code = code_object->co_code;
+        this->co_code = code_object->co_code;
 
         while(this->running) {
 
@@ -66,7 +68,6 @@ public:
             }
 
             const int opcode = co_code[this->pc];
-            std::cout << "current opcode is" << opcode << std::endl;
             this->pc += 1;
 
             switch (opcode) {
@@ -175,7 +176,7 @@ public:
                     default: {
                         zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
-                        .message = "Unknown binary pattern opcode",
+                        .message = "Unknown unary pattern opcode",
                         .error_code = 0
                     });
                     }if (nullptr == this->op_stack.top()) {
@@ -314,7 +315,6 @@ public:
 
                 auto fn_ptr = std::dynamic_pointer_cast<ZataFunction>(fn);
 
-
                 if (!fn_ptr) {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
@@ -331,20 +331,21 @@ public:
                 }
 
                 fn_ptr->code->locals = fns_locals;
-                auto function_code_object = fn_ptr->code;
 
                 CallFrame frame{
                     .pc = this->pc,
                     .locals = this->locals,
                     .return_address = this->pc,
                     .name = fn_ptr->object_name,
-
+                    .code_object = code_object,
                 };
 
                 this->call_stack.push(frame);
                 this->pc = 0;
 
-                this->exec(fn_ptr->code);
+                this->co_code = fn_ptr->code->co_code;
+                this->locals = fns_locals;
+                this->constant_pool = fn_ptr->code->consts;
 
                 break;
             }
@@ -353,9 +354,10 @@ public:
                     CallFrame frame = this->call_stack.top();
                     this->call_stack.pop();
 
-                    this->pc = frame.return_address;
                     this->locals = frame.locals;
-
+                    this->constant_pool = frame.code_object->consts;
+                    this->co_code = frame.code_object->co_code;
+                    this->pc = frame.return_address;
                 } else {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
@@ -429,7 +431,7 @@ public:
                 std::shared_ptr<ZataClass> class_ptr = std::dynamic_pointer_cast<ZataClass>(obj);
                 if (class_ptr) {
                     auto name = class_ptr->names.at(field_addr);
-                    this->op_stack.emplace(instance_ptr->fields[name]);
+                    this->op_stack.emplace(class_ptr->attrs[name]);
                     break;
                 }
 

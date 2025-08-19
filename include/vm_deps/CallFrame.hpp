@@ -10,6 +10,7 @@ struct CallFrame {
     std::vector<ZataObjectPtr> locals;
     int return_address = 0;
     std::string name;
+    std::shared_ptr<ZataCodeObject> code_object;
 };
 
 
