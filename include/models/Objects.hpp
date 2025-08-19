@@ -29,7 +29,7 @@ struct ZataObject {
     ZataObject() : object_type(nullptr), object_id(get_uuid()) {}
     virtual ~ZataObject() = default;
 
-protected:
+public:
     ZataObject(const ZataObject&) = default;
     bool operator==(const ZataObjectPtr& other) const {
         if (this->object_id == other->object_id) {
@@ -50,6 +50,7 @@ struct ZataCodeObject final : ZataObject {
 struct ZataModule final : ZataObject {
     std::string object_name;
     std::string module_path;
+    size_t global_count;
     std::vector<std::string> names;
     std::unordered_map<std::string, std::shared_ptr<ZataObject>> attrs;
     std::shared_ptr<ZataCodeObject> code;

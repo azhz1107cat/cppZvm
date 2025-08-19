@@ -36,6 +36,7 @@ public:
         const std::vector<Context>& _contexts)
     {
         this->module = _module;
+        this->globals.resize(_module->global_count);
         this->contexts = _contexts;
     }
 
@@ -65,6 +66,7 @@ public:
             }
 
             const int opcode = co_code[this->pc];
+            std::cout << "current opcode is" << opcode << std::endl;
             this->pc += 1;
 
             switch (opcode) {
@@ -204,38 +206,31 @@ public:
             case Opcode::LOAD_LOCAL: {
                 int var_addr = co_code[this->pc];
                 this->pc += 1;
-                std::cout << 221 << std::endl;
-                this->op_stack.emplace(this->locals[var_addr]);                std::cout << 222 << std::endl;
+                this->op_stack.emplace(this->locals[var_addr]);
                 break;
             }
             case Opcode::STORE_LOCAL: {
                 int var_addr = co_code[this->pc];
-                this->pc += 1;                std::cout << 223 << std::endl;
+                this->pc += 1;
 
                 ZataObjectPtr val = this->op_stack.top();
-                this->op_stack.pop();                std::cout << 224 << std::endl;
-
-                this->locals[var_addr] = val;                std::cout << 225 << std::endl;
+                this->op_stack.pop();
+                this->locals[var_addr] = val;
 
                 break;
             }
             case Opcode::LOAD_GLOBAL: {
-                std::cout << 334 << std::endl;
                 int var_addr = co_code[this->pc];
                 this->pc += 1;
                 this->op_stack.emplace(this->globals[var_addr]);
-                std::cout << 335 << std::endl;
                 break;
             }
             case Opcode::STORE_GLOBAL: {
                 int var_addr = co_code[this->pc];
                 this->pc += 1;
-                std::cout << 336 << std::endl;
                 ZataObjectPtr val = this->op_stack.top();
                 this->op_stack.pop();
-                std::cout << 3366 << std::endl;
                 this->globals[var_addr] = val;
-                std::cout << 337 << std::endl;
                 break;
             }
             case Opcode::JMP: {
@@ -299,6 +294,7 @@ public:
                 int arg_count = co_code[this->pc];
                 this->pc += 1;
 
+
                 ZataObjectPtr fn = this->op_stack.top();
                 this->op_stack.pop();
 
@@ -314,9 +310,10 @@ public:
 
                 for(int i = 0; i < arg_count; ++i) {
                     fns_locals.push_back(args[i]);
-                }                std::cout << 444 << std::endl;
+                }
 
                 auto fn_ptr = std::dynamic_pointer_cast<ZataFunction>(fn);
+
 
                 if (!fn_ptr) {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
@@ -325,7 +322,6 @@ public:
                         .error_code = 0
                     });
                 }
-                std::cout << 555 << std::endl;
 
                 // Check is in builtins
                 auto it = BuiltinsFunction.find(fn_ptr->object_name);
@@ -334,9 +330,7 @@ public:
                     break;
                 }
 
-
                 fn_ptr->code->locals = fns_locals;
-                std::cout << 666 << std::endl;
                 auto function_code_object = fn_ptr->code;
 
                 CallFrame frame{
@@ -345,17 +339,16 @@ public:
                     .return_address = this->pc,
                     .name = fn_ptr->object_name,
 
-                };std::cout << 777 << std::endl;
+                };
 
                 this->call_stack.push(frame);
                 this->pc = 0;
 
-                this->exec(fn_ptr->code);std::cout << 888 << std::endl;
+                this->exec(fn_ptr->code);
 
                 break;
             }
             case Opcode::RET: {
-                std::cout << 999 << std::endl;
                 if (!this->call_stack.empty()) {
                     CallFrame frame = this->call_stack.top();
                     this->call_stack.pop();
@@ -383,7 +376,7 @@ public:
                 if (!class_ptr) {
                     zata_vm_error_thrower(this->call_stack ,ZataError{
                         .name = "ZataRunTimeError",
-                        .message = "NEW_OBJ opcode: object is not a Zata Class",
+                        .message = "Make Instance opcode: object is not a Zata Class",
                         .error_code = 0
                     });
                 }
@@ -399,10 +392,10 @@ public:
                 int field_addr = co_code[this->pc];
                 this->pc += 1;
 
-                ZataObjectPtr value = this->op_stack.top();
+                ZataObjectPtr obj = this->op_stack.top();
                 this->op_stack.pop();
 
-                ZataObjectPtr obj = this->op_stack.top();
+                ZataObjectPtr value = this->op_stack.top();
                 this->op_stack.pop();
 
                 std::shared_ptr<ZataInstance> instance = std::dynamic_pointer_cast<ZataInstance>(obj);

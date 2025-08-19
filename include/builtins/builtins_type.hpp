@@ -22,6 +22,16 @@ inline ZataObjectPtr float_add(const std::vector<ZataObjectPtr>& args);
 inline ZataObjectPtr float_sub(const std::vector<ZataObjectPtr>& args);
 inline ZataObjectPtr float_eq(const std::vector<ZataObjectPtr>& args);
 inline ZataObjectPtr float64_add(const std::vector<ZataObjectPtr>& args);
+
+inline ZataObjectPtr int_gt(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr int_lt(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr int64_gt(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr int64_lt(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr float_gt(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr float_lt(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr float64_gt(const std::vector<ZataObjectPtr>& args);
+inline ZataObjectPtr float64_lt(const std::vector<ZataObjectPtr>& args);
+
 inline ZataObjectPtr dict_getitem(const std::vector<ZataObjectPtr>& args);
 inline ZataObjectPtr dict_setitem(const std::vector<ZataObjectPtr>& args);
 inline ZataObjectPtr tuple_getitem(const std::vector<ZataObjectPtr>& args);
@@ -47,6 +57,9 @@ inline void bind_int_type() {
     int_type->type_div = int_div;
     int_type->type_eq = int_eq;
     int_type->type_str = int_str;  // 绑定type_str
+    int_type->type_gt = int_gt;
+    int_type->type_lt = int_lt;
+    int_type->type_str = int_str;
 }
 
 // 字符串类型绑定
@@ -72,6 +85,8 @@ inline void bind_int64_type() {
     int64_type->type_sub = int64_sub;
     int64_type->type_eq = int64_eq;
     int64_type->type_str = int64_str;  // 绑定type_str
+    int64_type->type_gt = int64_gt;
+    int64_type->type_lt = int64_lt;
 }
 
 // 浮点数类型绑定
@@ -81,12 +96,17 @@ inline void bind_float_type() {
     float_type->type_sub = float_sub;
     float_type->type_eq = float_eq;
     float_type->type_str = float_str;  // 绑定type_str
+    float_type->type_gt = float_gt;
+    float_type->type_lt = float_lt;
+    float_type->type_str = float_str;
 }
 
 // 双精度浮点数类型绑定
 inline auto float64_type = std::make_shared<ZataBuiltinsType>();
 inline void bind_float64_type() {
     float64_type->type_add = float64_add;
+    float64_type->type_gt = float64_gt;
+    float64_type->type_lt = float64_lt;
     float64_type->type_str = float64_str;  // 绑定type_str
 }
 
@@ -244,6 +264,28 @@ inline ZataObjectPtr int_eq(const std::vector<ZataObjectPtr>& args) {
     return result;
 }
 
+
+inline ZataObjectPtr int_gt(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataInt>(args[0]);
+    auto other = std::dynamic_pointer_cast<ZataInt>(args[1]);
+    if (!self || !other) return nullptr;
+
+    auto result = std::make_shared<ZataState>();
+    result->val = (self->val > other->val) ? 1 : 0;
+    return result;
+}
+
+
+inline ZataObjectPtr int_lt(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataInt>(args[0]);
+    auto other = std::dynamic_pointer_cast<ZataInt>(args[1]);
+    if (!self || !other) return nullptr;
+
+    auto result = std::make_shared<ZataState>();
+    result->val = (self->val < other->val) ? 1 : 0;
+    return result;
+}
+
 // 字符串加法（拼接）
 inline ZataObjectPtr str_add(const std::vector<ZataObjectPtr>& args) {
     auto self = std::dynamic_pointer_cast<ZataString>(args[0]);
@@ -300,6 +342,26 @@ inline ZataObjectPtr int64_eq(const std::vector<ZataObjectPtr>& args) {
     return result;
 }
 
+inline ZataObjectPtr int64_gt(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataInt64>(args[0]);
+    auto other = std::dynamic_pointer_cast<ZataInt64>(args[1]);
+    if (!self || !other) return nullptr;
+
+    auto result = std::make_shared<ZataState>();
+    result->val = (self->val > other->val) ? 1 : 0;
+    return result;
+}
+
+inline ZataObjectPtr int64_lt(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataInt64>(args[0]);
+    auto other = std::dynamic_pointer_cast<ZataInt64>(args[1]);
+    if (!self || !other) return nullptr;
+
+    auto result = std::make_shared<ZataState>();
+    result->val = (self->val < other->val) ? 1 : 0;
+    return result;
+}
+
 // 浮点数（ZataFloat）运算
 inline ZataObjectPtr float_add(const std::vector<ZataObjectPtr>& args) {
     auto self = std::dynamic_pointer_cast<ZataFloat>(args[0]);
@@ -333,6 +395,28 @@ inline ZataObjectPtr float_eq(const std::vector<ZataObjectPtr>& args) {
     return result;
 }
 
+// float 大于：self > other
+inline ZataObjectPtr float_gt(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataFloat>(args[0]);
+    auto other = std::dynamic_pointer_cast<ZataFloat>(args[1]);
+    if (!self || !other) return nullptr;
+
+    auto result = std::make_shared<ZataState>();
+    result->val = (self->val > other->val) ? 1 : 0;
+    return result;
+}
+
+// float 小于：self < other
+inline ZataObjectPtr float_lt(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataFloat>(args[0]);
+    auto other = std::dynamic_pointer_cast<ZataFloat>(args[1]);
+    if (!self || !other) return nullptr;
+
+    auto result = std::make_shared<ZataState>();
+    result->val = (self->val < other->val) ? 1 : 0;
+    return result;
+}
+
 // 双精度浮点数（ZataFloat64）运算
 inline ZataObjectPtr float64_add(const std::vector<ZataObjectPtr>& args) {
     auto self = std::dynamic_pointer_cast<ZataFloat64>(args[0]);
@@ -342,6 +426,28 @@ inline ZataObjectPtr float64_add(const std::vector<ZataObjectPtr>& args) {
     auto result = std::make_shared<ZataFloat64>();
     result->val = self->val + other->val;
     result->object_type = float64_type;  // 补充结果的类型绑定
+    return result;
+}
+
+// float64 大于：self > other
+inline ZataObjectPtr float64_gt(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataFloat64>(args[0]);
+    auto other = std::dynamic_pointer_cast<ZataFloat64>(args[1]);
+    if (!self || !other) return nullptr;
+
+    auto result = std::make_shared<ZataState>();
+    result->val = (self->val > other->val) ? 1 : 0;
+    return result;
+}
+
+// float64 小于：self < other
+inline ZataObjectPtr float64_lt(const std::vector<ZataObjectPtr>& args) {
+    auto self = std::dynamic_pointer_cast<ZataFloat64>(args[0]);
+    auto other = std::dynamic_pointer_cast<ZataFloat64>(args[1]);
+    if (!self || !other) return nullptr;
+
+    auto result = std::make_shared<ZataState>();
+    result->val = (self->val < other->val) ? 1 : 0;
     return result;
 }
 

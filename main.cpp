@@ -43,147 +43,220 @@ PYBIND11_MODULE(cppZvm, m) {
         py::arg("module"), py::arg("contexts")
     );
 
-    // 绑定 ZataUserType
-    py::class_<ZataUserType, ZataMetaType, std::shared_ptr<ZataUserType>>(m, "ZataUserType")
-        .def(py::init<>())
-        .def_readwrite("object_type", &ZataUserType::object_type)
-        .def_readwrite("type_new", &ZataUserType::type_new)
-        .def_readwrite("type_init", &ZataUserType::type_init)
-        .def_readwrite("type_add", &ZataUserType::type_add)
-        .def_readwrite("type_sub", &ZataUserType::type_sub)
-        .def_readwrite("type_mul", &ZataUserType::type_mul)
-        .def_readwrite("type_div", &ZataUserType::type_div)
-        .def_readwrite("type_mod", &ZataUserType::type_mod)
-        .def_readwrite("type_neg", &ZataUserType::type_neg)
-        .def_readwrite("type_eq", &ZataUserType::type_eq)
-        .def_readwrite("type_weq", &ZataUserType::type_weq)
-        .def_readwrite("type_gt", &ZataUserType::type_gt)
-        .def_readwrite("type_lt", &ZataUserType::type_lt)
-        .def_readwrite("type_ge", &ZataUserType::type_ge)
-        .def_readwrite("type_le", &ZataUserType::type_le)
-        .def_readwrite("type_bit_and", &ZataUserType::type_bit_and)
-        .def_readwrite("type_bit_not", &ZataUserType::type_bit_not)
-        .def_readwrite("type_bit_or", &ZataUserType::type_bit_or)
-        .def_readwrite("type_bit_xor", &ZataUserType::type_bit_xor)
-        .def_readwrite("type_nil", &ZataUserType::type_nil)
-        .def_readwrite("type_str", &ZataUserType::type_str)
-        .def_readwrite("type_getitem", &ZataUserType::type_getitem)
-        .def_readwrite("type_setitem", &ZataUserType::type_setitem)
-        .def_readwrite("type_delitem", &ZataUserType::type_delitem)
-        .def_readwrite("type_call", &ZataUserType::type_call)
-        .def_readwrite("type_del", &ZataUserType::type_del);
+	// 1. 顶层基类：ZataObject（所有对象的父类）
+	py::class_<ZataObject, std::shared_ptr<ZataObject>>(m, "ZataObject")
+		.def_readonly("object_type", &ZataObject::object_type)
+		.def_readonly("object_id", &ZataObject::object_id)
+		.def("__eq__", &ZataObject::operator==);
 
-    // 6. 绑定 ZataCodeObject（继承ZataObject）
-    py::class_<ZataCodeObject, ZataObject, std::shared_ptr<ZataCodeObject>>(m, "ZataCodeObject")
-        .def(py::init<>())
-        .def_readwrite("locals", &ZataCodeObject::locals)
-        .def_readwrite("consts", &ZataCodeObject::consts)
-        .def_readwrite("co_code", &ZataCodeObject::co_code)
-        .def_readwrite("line_map", &ZataCodeObject::line_map);
+	// 2. ZataMetaType（继承 ZataObject）→ 元类型基类
+	py::class_<ZataMetaType, ZataObject, std::shared_ptr<ZataMetaType>>(m, "ZataMetaType")
+		.def(py::init<>())
+		.def_readwrite("object_type", &ZataMetaType::object_type, py::return_value_policy::reference)
+		.def_readwrite("type_new", &ZataMetaType::type_new)
+		.def_readwrite("type_init", &ZataMetaType::type_init)
+		.def_readwrite("type_add", &ZataMetaType::type_add)
+		.def_readwrite("type_sub", &ZataMetaType::type_sub)
+		.def_readwrite("type_mul", &ZataMetaType::type_mul)
+		.def_readwrite("type_div", &ZataMetaType::type_div)
+		.def_readwrite("type_mod", &ZataMetaType::type_mod)
+		.def_readwrite("type_neg", &ZataMetaType::type_neg)
+		.def_readwrite("type_eq", &ZataMetaType::type_eq)
+		.def_readwrite("type_weq", &ZataMetaType::type_weq)
+		.def_readwrite("type_gt", &ZataMetaType::type_gt)
+		.def_readwrite("type_lt", &ZataMetaType::type_lt)
+		.def_readwrite("type_ge", &ZataMetaType::type_ge)
+		.def_readwrite("type_le", &ZataMetaType::type_le)
+		.def_readwrite("type_bit_and", &ZataMetaType::type_bit_and)
+		.def_readwrite("type_bit_not", &ZataMetaType::type_bit_not)
+		.def_readwrite("type_bit_or", &ZataMetaType::type_bit_or)
+		.def_readwrite("type_bit_xor", &ZataMetaType::type_bit_xor)
+		.def_readwrite("type_nil", &ZataMetaType::type_nil)
+		.def_readwrite("type_str", &ZataMetaType::type_str)
+		.def_readwrite("type_getitem", &ZataMetaType::type_getitem)
+		.def_readwrite("type_setitem", &ZataMetaType::type_setitem)
+		.def_readwrite("type_delitem", &ZataMetaType::type_delitem)
+		.def_readwrite("type_call", &ZataMetaType::type_call)
+		.def_readwrite("type_del", &ZataMetaType::type_del);
 
-    // 7. 绑定 ZataModule（继承ZataObject）
-    py::class_<ZataModule, ZataObject, std::shared_ptr<ZataModule>>(m, "ZataModule")
-        .def(py::init<>())
-        .def_readwrite("object_name", &ZataModule::object_name)
-        .def_readwrite("module_path", &ZataModule::module_path)
-        .def_readwrite("names", &ZataModule::names)
-        .def_readwrite("attrs", &ZataModule::attrs)
-        .def_readwrite("code", &ZataModule::code)
-        .def_readwrite("exports", &ZataModule::exports);
+	// 3. ZataBuiltinsType（继承 ZataMetaType）→ 内置元类型
+	py::class_<ZataBuiltinsType, ZataMetaType, std::shared_ptr<ZataBuiltinsType>>(m, "ZataBuiltinsType")
+		.def(py::init<>())
+		.def_readwrite("object_type", &ZataBuiltinsType::object_type, py::return_value_policy::reference)
+		.def_readwrite("type_new", &ZataBuiltinsType::type_new)
+		.def_readwrite("type_init", &ZataBuiltinsType::type_init)
+		.def_readwrite("type_add", &ZataBuiltinsType::type_add)
+		.def_readwrite("type_sub", &ZataBuiltinsType::type_sub)
+		.def_readwrite("type_mul", &ZataBuiltinsType::type_mul)
+		.def_readwrite("type_div", &ZataBuiltinsType::type_div)
+		.def_readwrite("type_mod", &ZataBuiltinsType::type_mod)
+		.def_readwrite("type_neg", &ZataBuiltinsType::type_neg)
+		.def_readwrite("type_eq", &ZataBuiltinsType::type_eq)
+		.def_readwrite("type_weq", &ZataBuiltinsType::type_weq)
+		.def_readwrite("type_gt", &ZataBuiltinsType::type_gt)
+		.def_readwrite("type_lt", &ZataBuiltinsType::type_lt)
+		.def_readwrite("type_ge", &ZataBuiltinsType::type_ge)
+		.def_readwrite("type_le", &ZataBuiltinsType::type_le)
+		.def_readwrite("type_bit_and", &ZataBuiltinsType::type_bit_and)
+		.def_readwrite("type_bit_not", &ZataBuiltinsType::type_bit_not)
+		.def_readwrite("type_bit_or", &ZataBuiltinsType::type_bit_or)
+		.def_readwrite("type_bit_xor", &ZataBuiltinsType::type_bit_xor)
+		.def_readwrite("type_nil", &ZataBuiltinsType::type_nil)
+		.def_readwrite("type_str", &ZataBuiltinsType::type_str)
+		.def_readwrite("type_getitem", &ZataBuiltinsType::type_getitem)
+		.def_readwrite("type_setitem", &ZataBuiltinsType::type_setitem)
+		.def_readwrite("type_delitem", &ZataBuiltinsType::type_delitem)
+		.def_readwrite("type_call", &ZataBuiltinsType::type_call)
+		.def_readwrite("type_del", &ZataBuiltinsType::type_del);
 
-    // 8. 绑定 ZataFunction（继承ZataObject）
-    py::class_<ZataFunction, ZataObject, std::shared_ptr<ZataFunction>>(m, "ZataFunction")
-        .def(py::init<>())
-        .def_readwrite("object_name", &ZataFunction::object_name)
-        .def_readwrite("arg_count", &ZataFunction::arg_count)
-        .def_readwrite("code", &ZataFunction::code)
-        .def_readwrite("free_vars_names", &ZataFunction::free_vars_names)
-        .def_readwrite("free_vars", &ZataFunction::free_vars);
+	// 4. ZataUserType（继承 ZataMetaType）→ 用户自定义元类型
+	py::class_<ZataUserType, ZataMetaType, std::shared_ptr<ZataUserType>>(m, "ZataUserType")
+		.def(py::init<>())
+		.def_readwrite("object_type", &ZataUserType::object_type, py::return_value_policy::reference)
+		.def_readwrite("type_new", &ZataUserType::type_new)
+		.def_readwrite("type_init", &ZataUserType::type_init)
+		.def_readwrite("type_add", &ZataUserType::type_add)
+		.def_readwrite("type_sub", &ZataUserType::type_sub)
+		.def_readwrite("type_mul", &ZataUserType::type_mul)
+		.def_readwrite("type_div", &ZataUserType::type_div)
+		.def_readwrite("type_mod", &ZataUserType::type_mod)
+		.def_readwrite("type_neg", &ZataUserType::type_neg)
+		.def_readwrite("type_eq", &ZataUserType::type_eq)
+		.def_readwrite("type_weq", &ZataUserType::type_weq)
+		.def_readwrite("type_gt", &ZataUserType::type_gt)
+		.def_readwrite("type_lt", &ZataUserType::type_lt)
+		.def_readwrite("type_ge", &ZataUserType::type_ge)
+		.def_readwrite("type_le", &ZataUserType::type_le)
+		.def_readwrite("type_bit_and", &ZataUserType::type_bit_and)
+		.def_readwrite("type_bit_not", &ZataUserType::type_bit_not)
+		.def_readwrite("type_bit_or", &ZataUserType::type_bit_or)
+		.def_readwrite("type_bit_xor", &ZataUserType::type_bit_xor)
+		.def_readwrite("type_nil", &ZataUserType::type_nil)
+		.def_readwrite("type_str", &ZataUserType::type_str)
+		.def_readwrite("type_getitem", &ZataUserType::type_getitem)
+		.def_readwrite("type_setitem", &ZataUserType::type_setitem)
+		.def_readwrite("type_delitem", &ZataUserType::type_delitem)
+		.def_readwrite("type_call", &ZataUserType::type_call)
+		.def_readwrite("type_del", &ZataUserType::type_del);
 
-    // 9. 绑定 ZataClass（继承ZataObject）
-    py::class_<ZataClass, ZataObject, std::shared_ptr<ZataClass>>(m, "ZataClass")
-        .def(py::init<>())
-        .def_readwrite("object_name", &ZataClass::object_name)
-        .def_readwrite("parent_class", &ZataClass::parent_class)
-        .def_readwrite("names", &ZataClass::names)
-        .def_readwrite("attrs", &ZataClass::attrs);
+	// 5. ZataBuiltinsClass（继承 ZataObject）→ 内置数据类型基类
+	py::class_<ZataBuiltinsClass, ZataObject, std::shared_ptr<ZataBuiltinsClass>>(m, "ZataBuiltinsClass")
+		.def(py::init<>())
+		.def_readwrite("object_type", &ZataBuiltinsClass::object_type)
+		.def_readwrite("val", &ZataBuiltinsClass::val);
 
-    // 10. 绑定 ZataInstance（继承ZataObject）
-    py::class_<ZataInstance, ZataObject, std::shared_ptr<ZataInstance>>(m, "ZataInstance")
-        .def(py::init<>())
-        .def_readwrite("object_type", &ZataInstance::object_type)
-        .def_readwrite("ref_class", &ZataInstance::ref_class)
-        .def_readwrite("names", &ZataInstance::names)
-        .def_readwrite("fields", &ZataInstance::fields);
+	// 6. ZataCodeObject（继承 ZataObject）→ 字节码对象
+	py::class_<ZataCodeObject, ZataObject, std::shared_ptr<ZataCodeObject>>(m, "ZataCodeObject")
+		.def(py::init<>())
+		.def_readwrite("locals", &ZataCodeObject::locals)
+		.def_readwrite("consts", &ZataCodeObject::consts)
+		.def_readwrite("co_code", &ZataCodeObject::co_code)
+		.def_readwrite("line_map", &ZataCodeObject::line_map);
 
-    // 11. 绑定内置数据类型（均继承ZataBuiltinsClass）
-    // 字符串对象
-    py::class_<ZataString, ZataBuiltinsClass, std::shared_ptr<ZataString>>(m, "ZataString")
-        .def(py::init<>())
-        .def_readwrite("val", &ZataString::val); // 覆盖ZataBuiltinsClass的val（C++允许隐藏）
+	// 7. ZataModule（继承 ZataObject）→ 模块对象
+	py::class_<ZataModule, ZataObject, std::shared_ptr<ZataModule>>(m, "ZataModule")
+		.def(py::init<>())
+		.def_readwrite("object_name", &ZataModule::object_name)
+		.def_readwrite("module_path", &ZataModule::module_path)
+		.def_readwrite("global_count", &ZataModule::global_count)
+		.def_readwrite("names", &ZataModule::names)
+		.def_readwrite("attrs", &ZataModule::attrs)
+		.def_readwrite("code", &ZataModule::code)
+		.def_readwrite("exports", &ZataModule::exports);
 
-    // 整数对象
-    py::class_<ZataInt, ZataBuiltinsClass, std::shared_ptr<ZataInt>>(m, "ZataInt")
-        .def(py::init<>())
-        .def_readwrite("val", &ZataInt::val);
+	// 8. ZataFunction（继承 ZataObject）→ 函数对象
+	py::class_<ZataFunction, ZataObject, std::shared_ptr<ZataFunction>>(m, "ZataFunction")
+		.def(py::init<>())
+		.def_readwrite("object_name", &ZataFunction::object_name)
+		.def_readwrite("arg_count", &ZataFunction::arg_count)
+		.def_readwrite("code", &ZataFunction::code)
+		.def_readwrite("free_vars_names", &ZataFunction::free_vars_names)
+		.def_readwrite("free_vars", &ZataFunction::free_vars);
 
-    // 长整数对象
-    py::class_<ZataInt64, ZataBuiltinsClass, std::shared_ptr<ZataInt64>>(m, "ZataInt64")
-        .def(py::init<>())
-        .def_readwrite("val", &ZataInt64::val);
+	// 9. ZataClass（继承 ZataObject）→ 类对象
+	py::class_<ZataClass, ZataObject, std::shared_ptr<ZataClass>>(m, "ZataClass")
+		.def(py::init<>())
+		.def_readwrite("object_name", &ZataClass::object_name)
+		.def_readwrite("parent_class", &ZataClass::parent_class)
+		.def_readwrite("names", &ZataClass::names)
+		.def_readwrite("attrs", &ZataClass::attrs);
 
-    // 无限整数对象
-    py::class_<ZataInfInt, ZataBuiltinsClass, std::shared_ptr<ZataInfInt>>(m, "ZataInfInt")
-        .def(py::init<>())
-        .def_readwrite("is_negative", &ZataInfInt::is_negative)
-        .def_readwrite("digits", &ZataInfInt::digits)
-        .def_readonly_static("BASE", &ZataInfInt::BASE)
-        .def_readonly_static("BASE_DIGITS", &ZataInfInt::BASE_DIGITS);
+	// 10. ZataInstance（继承 ZataObject）→ 实例对象
+	py::class_<ZataInstance, ZataObject, std::shared_ptr<ZataInstance>>(m, "ZataInstance")
+		.def(py::init<>())
+		.def_readwrite("object_type", &ZataInstance::object_type)
+		.def_readwrite("ref_class", &ZataInstance::ref_class)
+		.def_readwrite("names", &ZataInstance::names)
+		.def_readwrite("fields", &ZataInstance::fields);
 
-    // 浮点数对象
-    py::class_<ZataFloat, ZataBuiltinsClass, std::shared_ptr<ZataFloat>>(m, "ZataFloat")
-        .def(py::init<>())
-        .def_readwrite("val", &ZataFloat::val);
+	// 11. 内置数据类型（均继承 ZataBuiltinsClass）
+	// 字符串对象
+	py::class_<ZataString, ZataBuiltinsClass, std::shared_ptr<ZataString>>(m, "ZataString")
+		.def(py::init<>())
+		.def_readwrite("val", &ZataString::val);
 
-    // 长浮点数对象
-    py::class_<ZataFloat64, ZataBuiltinsClass, std::shared_ptr<ZataFloat64>>(m, "ZataFloat64")
-        .def(py::init<>())
-        .def_readwrite("val", &ZataFloat64::val);
+	// 整数对象
+	py::class_<ZataInt, ZataBuiltinsClass, std::shared_ptr<ZataInt>>(m, "ZataInt")
+		.def(py::init<>())
+		.def_readwrite("val", &ZataInt::val);
 
-    // 安全小数对象
-    py::class_<ZataDec, ZataBuiltinsClass, std::shared_ptr<ZataDec>>(m, "ZataDec")
-        .def(py::init<>())
-        .def_readwrite("is_negative", &ZataDec::is_negative)
-        .def_readwrite("int_digits", &ZataDec::int_digits)
-        .def_readwrite("frac_digits", &ZataDec::frac_digits)
-        .def_readonly_static("BASE", &ZataDec::BASE)
-        .def_readonly_static("BASE_DIGITS", &ZataDec::BASE_DIGITS);
+	// 长整数对象
+	py::class_<ZataInt64, ZataBuiltinsClass, std::shared_ptr<ZataInt64>>(m, "ZataInt64")
+		.def(py::init<>())
+		.def_readwrite("val", &ZataInt64::val);
 
-    // 列表对象
-    py::class_<ZataList, ZataBuiltinsClass, std::shared_ptr<ZataList>>(m, "ZataList")
-        .def(py::init<>())
-        .def_readwrite("items", &ZataList::items)
-        .def_readwrite("size", &ZataList::size);
+	// 无限整数对象
+	py::class_<ZataInfInt, ZataBuiltinsClass, std::shared_ptr<ZataInfInt>>(m, "ZataInfInt")
+		.def(py::init<>())
+		.def_readwrite("is_negative", &ZataInfInt::is_negative)
+		.def_readwrite("digits", &ZataInfInt::digits)
+		.def_readonly_static("BASE", &ZataInfInt::BASE)
+		.def_readonly_static("BASE_DIGITS", &ZataInfInt::BASE_DIGITS);
 
-    // 字典对象
-    py::class_<ZataDict, ZataBuiltinsClass, std::shared_ptr<ZataDict>>(m, "ZataDict")
-        .def(py::init<>())
-        .def_readwrite("key_val", &ZataDict::key_val);
+	// 浮点数对象
+	py::class_<ZataFloat, ZataBuiltinsClass, std::shared_ptr<ZataFloat>>(m, "ZataFloat")
+		.def(py::init<>())
+		.def_readwrite("val", &ZataFloat::val);
 
-    // 元组对象
-    py::class_<ZataTuple, ZataBuiltinsClass, std::shared_ptr<ZataTuple>>(m, "ZataTuple")
-        .def(py::init<>())
-        .def_readwrite("items", &ZataTuple::items);
+	// 长浮点数对象
+	py::class_<ZataFloat64, ZataBuiltinsClass, std::shared_ptr<ZataFloat64>>(m, "ZataFloat64")
+		.def(py::init<>())
+		.def_readwrite("val", &ZataFloat64::val);
 
-    // 记录对象
-    py::class_<ZataRecord, ZataBuiltinsClass, std::shared_ptr<ZataRecord>>(m, "ZataRecord")
-        .def(py::init<>())
-        .def_readwrite("attrs", &ZataRecord::attrs);
+	// 安全小数对象
+	py::class_<ZataDec, ZataBuiltinsClass, std::shared_ptr<ZataDec>>(m, "ZataDec")
+		.def(py::init<>())
+		.def_readwrite("is_negative", &ZataDec::is_negative)
+		.def_readwrite("int_digits", &ZataDec::int_digits)
+		.def_readwrite("frac_digits", &ZataDec::frac_digits)
+		.def_readonly_static("BASE", &ZataDec::BASE)
+		.def_readonly_static("BASE_DIGITS", &ZataDec::BASE_DIGITS);
 
-    // 状态对象
-    py::class_<ZataState, ZataBuiltinsClass, std::shared_ptr<ZataState>>(m, "ZataState")
-        .def(py::init<>())
-        .def_readwrite("val", &ZataState::val);
+	// 列表对象
+	py::class_<ZataList, ZataBuiltinsClass, std::shared_ptr<ZataList>>(m, "ZataList")
+		.def(py::init<>())
+		.def_readwrite("items", &ZataList::items)
+		.def_readwrite("size", &ZataList::size);
+
+	// 字典对象
+	py::class_<ZataDict, ZataBuiltinsClass, std::shared_ptr<ZataDict>>(m, "ZataDict")
+		.def(py::init<>())
+		.def_readwrite("key_val", &ZataDict::key_val);
+
+	// 元组对象
+	py::class_<ZataTuple, ZataBuiltinsClass, std::shared_ptr<ZataTuple>>(m, "ZataTuple")
+		.def(py::init<>())
+		.def_readwrite("items", &ZataTuple::items);
+
+	// 记录对象
+	py::class_<ZataRecord, ZataBuiltinsClass, std::shared_ptr<ZataRecord>>(m, "ZataRecord")
+		.def(py::init<>())
+		.def_readwrite("attrs", &ZataRecord::attrs);
+
+	// 状态对象
+	py::class_<ZataState, ZataBuiltinsClass, std::shared_ptr<ZataState>>(m, "ZataState")
+		.def(py::init<>())
+		.def_readwrite("val", &ZataState::val);
 
     // 绑定整数创建函数
     m.def("create_int", &create_int,
